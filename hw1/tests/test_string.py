@@ -12,7 +12,7 @@ class TestEmpty:
     def test_index(self):
         string = ""
         with pytest.raises(IndexError):
-            assert string[10]
+            string[10]
 
 
 class TestTypeConversion:

@@ -5,13 +5,13 @@ import pytest
 
 def test_zero_divisision():
     with pytest.raises(ZeroDivisionError):
-        assert - 1 / 0
+        - 1 / 0
 
 
 class TestRoot:
     def test_negative_root(self):
         with pytest.raises(ValueError):
-            assert math.sqrt(-16) == -4j
+            math.sqrt(-16)
 
     @pytest.mark.parametrize("i", list(range(100)))
     def test_positive_root(self, i):

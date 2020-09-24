@@ -12,7 +12,7 @@ class TestEmpty:
     def test_negative(self):
         my_dict = {}
         with pytest.raises(KeyError):
-            assert my_dict.pop(10)
+            my_dict.pop(10)
 
 
 class TestFilled:
@@ -24,13 +24,14 @@ class TestFilled:
             my_dict[i] = (i - 7) * 2 + 1
         assert len(my_dict) == length
 
-    @pytest.mark.parametrize('k', list(range(100)))
-    def test_values(self, k):
-        length = random.randint(100, 1000)
-        my_dict = {}
-        for i in range(length):
-            my_dict[i] = str(i)
-        assert my_dict[k] == str(k)
+    @pytest.mark.parametrize(
+        'key, value, expected', [
+            (1, '1', {1: '1'}),
+            (2, '2', {2: '2'})
+        ])
+    def test_equal(self, key, value, expected):
+        my_dict = {key: value}
+        assert my_dict == expected
 
     def test_pop(self):
         length = random.randint(100, 1000)

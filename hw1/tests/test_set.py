@@ -11,8 +11,8 @@ class TestEmpty:
 
     def test_negative(self):
         my_set = set()
-        with pytest.raises(AssertionError):
-            assert 10 in my_set
+        assert 10 not in my_set
+
 
 
 class TestFilled:
@@ -22,11 +22,11 @@ class TestFilled:
         my_set = {i ** 2 for i in range(length)}
         assert len(my_set) == length
 
-    @pytest.mark.parametrize('i', list(range(100)))
-    def test_values(self, i):
-        length = random.randint(100, 1000)
-        my_set = {str(i) for i in range(length)}
-        assert str(i) in my_set
+    @pytest.mark.parametrize('values, expected', [
+        ([1, 2, 3, 4], {1, 2, 3, 4})
+    ])
+    def test_convertion(self, values, expected):
+        assert {i for i in values} == expected
 
     def test_clear(self):
         length = random.randint(100, 1000)
