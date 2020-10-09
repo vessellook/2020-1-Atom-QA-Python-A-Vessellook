@@ -58,3 +58,6 @@ class BasePage(object):
         self.click(locator, 10)
         input_element.clear()
         input_element.send_keys(text)
+
+    def get_title(self) -> str:
+        return self.driver.title
