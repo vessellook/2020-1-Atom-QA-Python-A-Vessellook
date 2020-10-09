@@ -10,7 +10,7 @@ from _pytest.config.argparsing import Parser
 from _pytest.fixtures import FixtureRequest
 
 from variables import EMAIL, PASSWORD
-
+from ui.fixtures import *
 
 def pytest_addoption(parser: Parser):
     parser.addoption('--browser', default='chrome')
@@ -35,7 +35,7 @@ def config(request: FixtureRequest):
     return {
         'browser': browser,
         'version': version,
-        'download_dir': '/tmp',
+        'download_dir': '/tmp.txt',
         'selenoid': selenoid,
         'email': email,
         'password': password
