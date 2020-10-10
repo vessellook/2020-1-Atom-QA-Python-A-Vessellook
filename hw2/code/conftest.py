@@ -1,16 +1,19 @@
+from urllib.parse import urlparse
+
 from selenium import webdriver
 from selenium.webdriver import ChromeOptions
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
-
-from urllib.parse import urlparse
 
 import pytest
 from _pytest.config.argparsing import Parser
 from _pytest.fixtures import FixtureRequest
 
 from variables import EMAIL, PASSWORD
-from ui.fixtures import *
+
+
+pytest_plugins = 'ui.fixtures'
+
 
 def pytest_addoption(parser: Parser):
     parser.addoption('--browser', default='chrome')
@@ -18,7 +21,9 @@ def pytest_addoption(parser: Parser):
     parser.addoption('--selenoid', default=None,
                      help="parameter format: --selenoid='host:port'. Default is None")
     parser.addoption('--email', default=EMAIL, help=f'email to log in. Default is {EMAIL}')
-    parser.addoption('--password', default=PASSWORD, help=f'password to log in. Default is {PASSWORD}')
+    parser.addoption('--password',
+                     default=PASSWORD,
+                     help=f'password to log in. Default is {PASSWORD}')
 
 
 @pytest.fixture(scope='session')
@@ -61,7 +66,8 @@ def driver(config):
         options.add_experimental_option('prefs', prefs)
 
         if selenoid:
-            driver = webdriver.Remote(command_executor=f'http://{selenoid[0]}:{selenoid[1]}/wd/hub/',
+            host, port = selenoid
+            driver = webdriver.Remote(command_executor=f'http://{host}:{port}/wd/hub/',
                                       options=options,
                                       desired_capabilities={'acceptInsecureCerts': True}
                                       )
