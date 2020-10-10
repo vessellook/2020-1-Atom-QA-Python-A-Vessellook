@@ -51,6 +51,10 @@ class UnsupportedBrowserException(Exception):
     pass
 
 
+class ElementNotFoundException(Exception):
+    pass
+
+
 @pytest.fixture(scope='function')
 def driver(config):
     browser = config['browser']

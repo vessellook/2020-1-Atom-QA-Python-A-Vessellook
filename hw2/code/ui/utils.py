@@ -9,6 +9,10 @@ def generate_campaign_name(prefix='Кампания'):
     return f'{prefix} {time.time()} {random.random()}'
 
 
+def generate_segment_name(prefix='Сегмент'):
+    return f'{prefix} {time.time()} {random.random()}'
+
+
 def lowercase_xpath(value: str):
     lowercase = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя' + ascii_lowercase
     uppercase = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ' + ascii_uppercase

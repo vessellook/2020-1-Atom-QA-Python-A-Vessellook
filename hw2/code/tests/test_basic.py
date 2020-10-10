@@ -2,8 +2,9 @@ import pytest
 from ui.pages.main_page import MainPage
 from ui.pages.create_campaign_page import CreateCampaignPage
 from ui.pages.dashboard_page import DashboardPage
+from ui.pages.segments_page import SegmentsPage
 
-from ui.utils import generate_campaign_name
+from ui.utils import generate_campaign_name, generate_segment_name
 
 
 @pytest.mark.skip(reason="It's working fine")
@@ -45,3 +46,12 @@ def test_create_site_traffic_campaign(create_campaign_page: CreateCampaignPage, 
     dashboard_page.remove_campaign(campaign_name)
     assert not dashboard_page.has_campaign(campaign_name)
 
+
+# @pytest.mark.skip
+@pytest.mark.UI
+def test_create_segment(segments_page: SegmentsPage):
+    segment_name = generate_segment_name()
+    segments_page.create_segment(segment_name)
+    assert segments_page.has_segment(segment_name)
+    segments_page.remove_segment(segment_name)
+    assert not segments_page.has_segment(segment_name)

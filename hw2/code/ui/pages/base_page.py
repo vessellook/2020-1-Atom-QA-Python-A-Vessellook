@@ -5,12 +5,12 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as conditions
 from selenium.webdriver.support.wait import WebDriverWait
 
-from ui.locators import basic_locators
+from ui.locators.basic_locators import BasePageLocators
 
 
-class BasePage(object):
+class BasePage:
     RETRY_COUNT = 3
-    locators = basic_locators.BasePageLocators()
+    locators = BasePageLocators()
 
     def __init__(self, driver: WebDriver):
         self.driver = driver

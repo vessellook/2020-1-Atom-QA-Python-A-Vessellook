@@ -23,3 +23,8 @@ def dashboard_page(main_page, config):
 @pytest.fixture(scope='function')
 def create_campaign_page(dashboard_page, config):
     return dashboard_page.create_campaign()
+
+
+@pytest.fixture(scope='function')
+def segments_page(dashboard_page, config):
+    return dashboard_page.open_segments_page()
