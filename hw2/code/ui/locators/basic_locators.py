@@ -1,85 +1,68 @@
-from selenium.webdriver.common.by import By
-from ui.utils import lowercase_xpath
+from ui.utils import locator, XPATH
 
 
 class BasePageLocators(object):
-    LOGO = (By.XPATH, '//a[contains(@class, "head-module-myTargetLogo")]')
+    LOGO = locator(XPATH('a')
+                   .add_class('head-module-myTargetLogo'))
 
 
 class MainPageLocators(BasePageLocators):
-    AUTH_POPUP_BUTTON = (By.XPATH, '//div[contains(@class,"responseHead-module-rightSide")]'
-                                   '/div[contains(@class,"responseHead-module-button")]')
-    AUTH_EMAIL_INPUT = (By.XPATH, '//div[contains(@class,"authForm-module-inputs")]'
-                                  '/div[contains(@class,"authForm-module-inputWrap")][last()-1]'
-                                  '/input[contains(@class,"authForm-module-input")]')
-    AUTH_PASSWD_INPUT = (By.XPATH, '//div[contains(@class,"authForm-module-inputs")]'
-                                   '/div[contains(@class,"authForm-module-inputWrap")][last()]'
-                                   '/input[contains(@class,"authForm-module-inputPassword")]')
-    AUTH_SUBMIT = (By.XPATH, '//div[contains(@class,"authForm-module-button")]')
+    AUTH_POPUP_BUTTON = locator(XPATH('div')
+                                .add_class('responseHead-module-rightSide')
+                                .add_descendant('div')
+                                .add_class('responseHead-module-button'))
+
+    AUTH_EMAIL_INPUT = locator(XPATH('div')
+                               .add_class('authForm-module-inputs')
+                               .add_descendant('div')
+                               .add_class('authForm-module-inputWrap')
+                               .add_predicate('[last()-1]')
+                               .add_descendant('input')
+                               .add_class('authForm-module-input'))
+
+    AUTH_PASSWD_INPUT = locator(XPATH('div')
+                                .add_class('authForm-module-inputs')
+                                .add_descendant('div')
+                                .add_class('authForm-module-inputWrap')
+                                .add_predicate('[last()]')
+                                .add_descendant('input')
+                                .add_class('authForm-module-inputPassword'))
+
+    AUTH_SUBMIT = locator(XPATH('div')
+                          .add_class('authForm-module-button'))
 
 
 class DashboardPageLocators(BasePageLocators):
-    CREATE_CAMPAIGN_BUTTON = (By.XPATH, '//div[contains(@class,"dashboard-module-createButtonWrap")]'
-                                        '//div[contains(@class, "button-module-textWrapper")]')
+    CREATE_CAMPAIGN_BUTTON = locator(XPATH('div')
+                                     .add_class('dashboard-module-createButtonWrap')
+                                     .add_descendant('div')
+                                     .add_class('button-module-textWrapper'))
 
+    DELETE_CAMPAIGN_BUTTON = locator(XPATH()
+                                     .add_class('optionsList-module-optionsList')
+                                     .add_descendant()
+                                     .add_predicate(f'contains({XPATH.lowercase(".")},"удалить")'))
 
-class CreateCampaignPageLocators(BasePageLocators):
-    TRAFFIC_BUTTON = (By.XPATH, '//div[contains(@class,"_traffic")][@data-class-name="ColumnListItemView"]')
-    SOCIAL_ENGAGEMENT_BUTTON = (By.XPATH, '//div[contains(@class,"_socialengagement")]'
-                                          '[@data-class-name="ColumnListItemView"]')
+    SEGMENTS_BUTTON = locator(XPATH()
+                              .add_class('center-module-segments'))
 
-    """Locators for input lines"""
-    INPUT_LINE = {
-        'URL': (By.XPATH, '//input[contains(@class,"suggester-module-searchInput")]'),
-        'CAMPAIGN_NAME': (By.XPATH, '//div[contains(@class, "input_campaign-name")]//input'),
-        'TOTAL_SUM': (By.XPATH, '//div[contains(@class,"budget-setting__budget")]'
-                                '//div[contains(@class,"budget-setting__item-wrap")][last()]'
-                                '//input'),
-        'SUM_PER_DAY': (By.XPATH, '//div[contains(@class,"budget-setting__budget")]'
-                                  '//div[contains(@class,"budget-setting__item-wrap")][last()-1]'
-                                  '//input')
-    }
+    NEXT_PAGINATION_BUTTON_ENABLED = locator(XPATH('div')
+                                             .add_class('pagination-module-rightBtn')
+                                             .disallow_class('button-module-disabled'))
 
-    """Locators for tab buttons
+    @staticmethod
+    def get_campaign_name_element(campaign_name: str):
+        return locator(XPATH('div')
+                       .add_class('nameCell-module-campaignNameCell')
+                       .add_predicate(f'contains(.,"{campaign_name}")'))
 
-    These buttons are used to change tab content
-    This tab contains two checkboxes that are used to choose target devices (mobile or desktop)
-    """
-    TAB_BUTTON = {
-        'CAROUSEL': (By.XPATH, '//div[@data-class-name="BannerFormatItemView"][1]'),
-        'MULTI_FORMAT': (By.XPATH, '//div[@data-class-name="BannerFormatItemView"][2]'),
-        'SQUARE_VIDEO': (By.XPATH, '//div[@data-class-name="BannerFormatItemView"][3]'),
-        'HORIZONTAL_VIDEO': (By.XPATH, '//div[@data-class-name="BannerFormatItemView"][4]'),
-        'FULL_SCREEN_VIDEO': (By.XPATH, '//div[@data-class-name="BannerFormatItemView"][5]'),
-        'BANNER': (By.XPATH, '//div[@data-class-name="BannerFormatItemView"][6]'),
-        'TEASER': (By.XPATH, '//div[@data-class-name="BannerFormatItemView"][7]')
-    }
-
-    DEVICE_TYPE_CHECKBOX = {
-        'MOBILE': (By.XPATH, f'//li[contains({lowercase_xpath(".")},"мобильные")]'
-                             '/input[contains(@class,"padItem-module-input")]'),
-        'DESKTOP': (By.XPATH, f'//li[contains({lowercase_xpath(".")},"десктопные")]'
-                              '/input[contains(@class,"padItem-module-input")]')
-    }
-
-    OPTIONS_TAB = (By.XPATH, '//div[contains(@class, "bannerFormats-module-padsWrap")]')
-    ADD_BANNER_BUTTON = (By.XPATH, '//div[@data-class-name="BannerForm"]'
-                                   '//button[contains(@class,"button_submit")]')
-
-    class Photo256x256:
-        ADD_FILE_BUTTON = (By.XPATH, '//div[contains(@class,"input__upload-wrap")]'
-                                     '//button[contains(@class,"button_general")]')
-
-        FILE_INPUT = (By.XPATH, '//input[@type="file"]')
-
-    class Photo600x600:
-        ADD_FILE_BUTTON = (By.XPATH, '//div[contains(@class,"input__upload-wrap")]'
-                                     '//button[contains(@class,"button_general")]')
-
-        FILE_INPUT = (By.XPATH, '//input[@type="file"]')
-
-    # class Photo256x256:
-    #     ADD_FILE_BUTTON = (By.XPATH, '//div[contains(@class,"input__upload-wrap")]'
-    #                                  '//button[contains(@class,"button_general")]')
-    #
-    #     FILE_INPUT = (By.XPATH, '//input[@type="file"]')
+    @staticmethod
+    def get_campaign_settings_button(campaign_name: str):
+        return locator(XPATH('div')
+                       .add_class('nameCell-module-campaignNameCell')
+                       .add_predicate(f'contains(.,"{campaign_name}")')
+                       .add_parent()
+                       .add_following_sibling()
+                       .add_num(1)
+                       .add_descendant()
+                       .add_class('icon-settings'))

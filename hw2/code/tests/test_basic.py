@@ -1,8 +1,8 @@
 import pytest
-
 from ui.pages.main_page import MainPage
 from ui.pages.create_campaign_page import CreateCampaignPage
 from ui.pages.dashboard_page import DashboardPage
+
 from ui.utils import generate_campaign_name
 
 
@@ -40,4 +40,8 @@ def test_create_vk_post_campaign(create_campaign_page: CreateCampaignPage, post_
 @pytest.mark.parametrize("site_url", ['https://vk.com'])
 def test_create_site_traffic_campaign(create_campaign_page: CreateCampaignPage, site_url):
     campaign_name = generate_campaign_name()
-    create_campaign_page.traffic(site_url, campaign_name, 500, 10000)
+    dashboard_page: DashboardPage = create_campaign_page.traffic(site_url, campaign_name, 500, 10000)
+    assert dashboard_page.has_campaign(campaign_name)
+    dashboard_page.remove_campaign(campaign_name)
+    assert not dashboard_page.has_campaign(campaign_name)
+

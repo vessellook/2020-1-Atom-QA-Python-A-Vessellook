@@ -1,3 +1,4 @@
+from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
@@ -14,13 +15,20 @@ class BasePage(object):
     def __init__(self, driver: WebDriver):
         self.driver = driver
 
-    def find(self, locator, timeout=None) -> WebElement:
+    def has(self, locator) -> bool:
+        try:
+            self.driver.find_element(*locator)
+        except NoSuchElementException:
+            return False
+        return True
+
+    def find(self, locator, timeout=10) -> WebElement:
         """поиск элемента с ожиданием
 
         кидает исключение StaleElementReferenceException"""
         return self.wait(timeout).until(conditions.presence_of_element_located(locator))
 
-    def click(self, locator, timeout=None):
+    def click(self, locator, timeout=10):
         # попытки чтобы кликнуть
         for i in range(self.RETRY_COUNT):
             try:
@@ -53,10 +61,11 @@ class BasePage(object):
         """
         self.wait(timeout).until(lambda browser: len(browser.find_elements(*locator)) == count)
 
-    def input(self, locator, text):
+    def input(self, locator, text, click: bool = True):
         input_element = self.find(locator, 10)
-        self.click(locator, 10)
-        input_element.clear()
+        if click:
+            self.click(locator, 10)
+            input_element.clear()
         input_element.send_keys(text)
 
     def get_title(self) -> str:
