@@ -1,5 +1,4 @@
-from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as conditions
@@ -15,10 +14,12 @@ class BasePage:
     def __init__(self, driver: WebDriver):
         self.driver = driver
 
-    def has(self, locator) -> bool:
+    def has(self, locator, timeout=10) -> bool:
         try:
-            self.driver.find_element(*locator)
-        except NoSuchElementException:
+            self.find(locator, timeout=timeout)
+        except StaleElementReferenceException:
+            return False
+        except TimeoutException:
             return False
         return True
 
@@ -27,6 +28,11 @@ class BasePage:
 
         кидает исключение StaleElementReferenceException"""
         return self.wait(timeout).until(conditions.presence_of_element_located(locator))
+
+    def refresh(self):
+        import time
+        time.sleep(10)
+        self.driver.refresh()
 
     def click(self, locator, timeout=10):
         # попытки чтобы кликнуть
@@ -49,7 +55,7 @@ class BasePage:
 
     def wait(self, timeout=None) -> WebDriverWait:
         if timeout is None:
-            timeout = 5
+            timeout = 10
         return WebDriverWait(self.driver, timeout=timeout)
 
     def count_elements(self, locator, count, timeout=1):

@@ -4,6 +4,7 @@ from selenium import webdriver
 from selenium.webdriver import ChromeOptions
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
+from selenium.webdriver import FirefoxOptions
 
 import pytest
 from _pytest.config.argparsing import Parser
@@ -11,31 +12,41 @@ from _pytest.fixtures import FixtureRequest
 
 from variables import EMAIL, PASSWORD
 
-
 pytest_plugins = 'ui.fixtures'
 
 
 def pytest_addoption(parser: Parser):
-    parser.addoption('--browser', default='chrome')
+    parser.addoption('--browser', default='chrome',
+                     help='browser to use in tests. Available values are: chrome, firefox')
     parser.addoption('--browser_ver', default='latest')
-    parser.addoption('--selenoid', default=None,
+    parser.addoption('--selenoid', default='',
                      help="parameter format: --selenoid='host:port'. Default is None")
     parser.addoption('--email', default=EMAIL, help=f'email to log in. Default is {EMAIL}')
     parser.addoption('--password',
                      default=PASSWORD,
                      help=f'password to log in. Default is {PASSWORD}')
+    parser.addoption('--headless', default=False,
+                     help="pass '--headless True' to start browser in headless mode")
 
 
 @pytest.fixture(scope='session')
 def config(request: FixtureRequest):
     browser = request.config.getoption('--browser')
     version = request.config.getoption('--browser_ver')
-    selenoid = request.config.getoption('--selenoid')
+    selenoid_opt: str = request.config.getoption('--selenoid')
     email = request.config.getoption('--email')
     password = request.config.getoption('--password')
+    headless = request.config.getoption('--headless')
 
-    if selenoid:
-        selenoid = urlparse(selenoid).hostname, urlparse(selenoid).port
+    if headless == 'True':
+        headless = True
+    else:
+        headless = False
+
+    selenoid = None
+    if selenoid_opt:
+        pos = selenoid_opt.rfind(':')
+        selenoid = selenoid_opt[:pos], int(selenoid_opt[pos+1:])
 
     return {
         'browser': browser,
@@ -43,7 +54,8 @@ def config(request: FixtureRequest):
         'download_dir': '/tmp.txt',
         'selenoid': selenoid,
         'email': email,
-        'password': password
+        'password': password,
+        'headless': headless
     }
 
 
@@ -65,6 +77,8 @@ def driver(config):
     if browser == 'chrome':
         options = ChromeOptions()
         options.add_argument("--window-size=800,600")
+        if config['headless']:
+            options.headless = True
 
         prefs = {"download.default_directory": download_dir}
         options.add_experimental_option('prefs', prefs)
@@ -83,9 +97,22 @@ def driver(config):
                                       )
 
     elif browser == 'firefox':
-        manager = GeckoDriverManager(version=version)
-        driver = webdriver.Firefox(executable_path=manager.install())
+        options = FirefoxOptions()
+        if config['headless']:
+            options.headless = True
 
+        if selenoid:
+            host, port = selenoid
+            driver = webdriver.Remote(command_executor=f'http://{host}:{port}/wd/hub/',
+                                      options=options,
+                                      desired_capabilities={'acceptInsecureCerts': True}
+                                      )
+        else:
+            manager = GeckoDriverManager(version=version)
+            driver = webdriver.Firefox(executable_path=manager.install(),
+                                       options=options,
+                                       desired_capabilities={'acceptInsecureCerts': True}
+                                       )
     else:
         raise UnsupportedBrowserException(f'Unsupported browser: "{browser}"')
 

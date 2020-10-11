@@ -1,4 +1,3 @@
-from selenium.webdriver.common.by import By
 from ui.locators.basic_locators import BasePageLocators
 from ui.utils import lowercase_xpath, XPATH, locator
 
@@ -13,35 +12,48 @@ class CreateCampaignPageLocators(BasePageLocators):
                                      .add_class('footer__button')
                                      .add_descendant('button')
                                      .add_class('button_submit'))
+    TRAFFIC_BUTTON = locator(XPATH('div')
+                             .add_class('_traffic')
+                             .add_attribute(attribute='data-class-name',
+                                            value='ColumnListItemView',
+                                            strict_match=False))
 
-    TRAFFIC_BUTTON = (By.XPATH, '//div[contains(@class,"_traffic")][@data-class-name="ColumnListItemView"]')
-    SOCIAL_ENGAGEMENT_BUTTON = (By.XPATH, '//div[contains(@class,"_socialengagement")]'
-                                          '[@data-class-name="ColumnListItemView"]')
+    SOCIAL_ENGAGEMENT_BUTTON = locator(XPATH('div')
+                                       .add_class('_socialengagement')
+                                       .add_attribute(attribute='data-class-name',
+                                                      value='ColumnListItemView',
+                                                      strict_match=False))
 
     """Locators for input lines"""
     INPUT_LINE = {
-        'URL': (By.XPATH, '//input[contains(@class,"suggester-module-searchInput")]'),
-        'CAMPAIGN_NAME': (By.XPATH, '//div[contains(@class, "input_campaign-name")]//input'),
-        'TOTAL_SUM': (By.XPATH, '//div[contains(@class,"budget-setting__budget")]'
-                                '//div[contains(@class,"budget-setting__item-wrap")][last()]'
-                                '//input'),
-        'SUM_PER_DAY': (By.XPATH, '//div[contains(@class,"budget-setting__budget")]'
-                                  '//div[contains(@class,"budget-setting__item-wrap")][last()-1]'
-                                  '//input'),
-        # 'BANNER_TITLE': (By.XPATH, '//li[contains(@class,"banner-form__field_input")]'
-        #                            '[not(contains(@class,"banner-form__field_input_slide-title"))]'
-        #                            '//div[contains(@class,"input_title")]'
-        #                            '//input'),
-        # 'BANNER_DESCRIPTION': (By.XPATH, '//li[contains(@class,"banner-form__field_textarea")]'
-        #                                  '[not(contains(@class,"banner-form__field_textarea_slide-text"))]'
-        #                                  '//textarea')
+        'URL': locator(XPATH('input')
+                       .add_class('suggester-module-searchInput')),
+        'CAMPAIGN_NAME': locator(XPATH('div')
+                                 .add_class('input_campaign-name')
+                                 .add_descendant('input')),
+        'TOTAL_SUM': locator(XPATH('div')
+                             .add_class('budget-setting__budget')
+                             .add_descendant('div')
+                             .add_class('budget-setting__item-wrap')
+                             .add_predicate('[last()]')
+                             .add_descendant('input')),
+        'SUM_PER_DAY': locator(XPATH('div')
+                               .add_class('budget-setting__budget')
+                               .add_descendant('div')
+                               .add_class('budget-setting__item-wrap')
+                               .add_predicate('[last()-1]')
+                               .add_descendant('input'))
     }
 
     DEVICE_TYPE_CHECKBOX = {
-        'MOBILE': (By.XPATH, f'//li[contains({lowercase_xpath(".")},"мобильные")]'
-                             '/input[contains(@class,"padItem-module-input")]'),
-        'DESKTOP': (By.XPATH, f'//li[contains({lowercase_xpath(".")},"десктопные")]'
-                              '/input[contains(@class,"padItem-module-input")]')
+        'MOBILE': locator(XPATH('li')
+                          .add_predicate(f'[contains({lowercase_xpath(".")},"мобильные")]')
+                          .add_descendant('input')
+                          .add_class('padItem-module-input')),
+        'DESKTOP': locator(XPATH('li')
+                           .add_predicate(f'[contains({lowercase_xpath(".")},"десктопные")]')
+                           .add_descendant('input')
+                           .add_class('padItem-module-input'))
     }
 
     class BannerLocators:
@@ -97,12 +109,6 @@ class CreateCampaignPageLocators(BasePageLocators):
                                .add_attribute(attribute='type',
                                               value='file',
                                               strict_match=True))
-                # 'ADD_BUTTON': (By.XPATH, '//div[contains(@class,"banner-form")]'
-                #                          f'//li[contains(@class,"banner-form__field")][{self.slide_num}]'
-                #                          '//button[contains(@class,"button_general")][contains(.,"600")]'),
-                # 'FILE_INPUT': (By.XPATH, '//div[contains(@class,"banner-form")]'
-                #                          f'//li[contains(@class,"banner-form__field")][{self.slide_num}]'
-                #                          '//input[@type="file"]')
 
         """Locators for tab buttons
     
@@ -111,25 +117,70 @@ class CreateCampaignPageLocators(BasePageLocators):
         """
         TAB_BUTTON = {
 
-            'CAROUSEL': (By.XPATH, '//div[@data-class-name="BannerFormatItemView"][1]'),
-            'MULTI_FORMAT': (By.XPATH, '//div[@data-class-name="BannerFormatItemView"][2]'),
-            'SQUARE_VIDEO': (By.XPATH, '//div[@data-class-name="BannerFormatItemView"][3]'),
-            'HORIZONTAL_VIDEO': (By.XPATH, '//div[@data-class-name="BannerFormatItemView"][4]'),
-            'FULL_SCREEN_VIDEO': (By.XPATH, '//div[@data-class-name="BannerFormatItemView"][5]'),
-            'BANNER': (By.XPATH, '//div[@data-class-name="BannerFormatItemView"][6]'),
-            'TEASER': (By.XPATH, '//div[@data-class-name="BannerFormatItemView"][7]')
+            'CAROUSEL': locator(XPATH('div')
+                                .add_attribute(attribute='data-class-name',
+                                               value='BannerFormatItemView',
+                                               strict_match=True)
+                                .add_num(1)),
+            'MULTI_FORMAT': locator(XPATH('div')
+                                    .add_attribute(attribute='data-class-name',
+                                                   value='BannerFormatItemView',
+                                                   strict_match=True)
+                                    .add_num(2)),
+            'SQUARE_VIDEO': locator(XPATH('div')
+                                    .add_attribute(attribute='data-class-name',
+                                                   value='BannerFormatItemView',
+                                                   strict_match=True)
+                                    .add_num(3)),
+            'HORIZONTAL_VIDEO': locator(XPATH('div')
+                                        .add_attribute(attribute='data-class-name',
+                                                       value='BannerFormatItemView',
+                                                       strict_match=True)
+                                        .add_num(4)),
+            'FULL_SCREEN_VIDEO': locator(XPATH('div')
+                                         .add_attribute(attribute='data-class-name',
+                                                        value='BannerFormatItemView',
+                                                        strict_match=True)
+                                         .add_num(5)),
+            'BANNER': locator(XPATH('div')
+                              .add_attribute(attribute='data-class-name',
+                                             value='BannerFormatItemView',
+                                             strict_match=True)
+                              .add_num(6)),
+            'TEASER': locator(XPATH('div')
+                              .add_attribute(attribute='data-class-name',
+                                             value='BannerFormatItemView',
+                                             strict_match=True)
+                              .add_num(7)),
 
         }
 
-        OPTIONS_TAB = (By.XPATH, '//div[contains(@class, "bannerFormats-module-padsWrap")]')
-        ADD_BANNER_BUTTON = (By.XPATH, '//div[@data-class-name="BannerForm"]'
-                                       '//button[contains(@class,"button_submit")]')
+        OPTIONS_TAB = locator(XPATH('div')
+                              .add_class('bannerFormats-module-padsWrap'))
+        ADD_BANNER_BUTTON = locator(XPATH('div')
+                                    .add_attribute(attribute='data-class-name',
+                                                   value='BannerForm',
+                                                   strict_match=True)
+                                    .add_descendant('button')
+                                    .add_class('button_submit'))
 
         PHOTO_256 = {
 
-            'ADD_BUTTON': (By.XPATH, '//div[@data-class-name="FileImageView"][contains(.,"256")]'
-                                     '//button[contains(@class,"button_general")]'),
-            'FILE_INPUT': (By.XPATH, '//div[@data-class-name="FileImageView"][contains(.,"256")]'
-                                     '//input[@type="file"]')
+            'ADD_BUTTON': locator(XPATH('div')
+                                  .add_attribute(attribute='data-class-name',
+                                                 value='FileImageView',
+                                                 strict_match=True)
+                                  .add_predicate('[contains(.,"256")]')
+                                  .add_descendant('button')
+                                  .add_class('button_general')),
 
+            'FILE_INPUT': locator(XPATH('div')
+                                  .add_attribute(attribute='data-class-name',
+                                                 value='FileImageView',
+                                                 strict_match=True)
+                                  .add_predicate('[contains(.,"256")]')
+                                  .add_descendant('input')
+                                  .add_attribute(attribute='type',
+                                                 value='file',
+                                                 strict_match=True))
         }

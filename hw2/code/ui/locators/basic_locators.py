@@ -33,6 +33,13 @@ class MainPageLocators(BasePageLocators):
 
 
 class DashboardPageLocators(BasePageLocators):
+    CREATE_CAMPAIGN_INTRODUCTION_LINK = locator(XPATH('li')
+                                                .add_class('instruction-module-item')
+                                                .add_descendant('a')
+                                                .add_attribute(attribute='href',
+                                                               value='/dashboard/new',
+                                                               strict_match=False))
+
     CREATE_CAMPAIGN_BUTTON = locator(XPATH('div')
                                      .add_class('dashboard-module-createButtonWrap')
                                      .add_descendant('div')
@@ -47,7 +54,8 @@ class DashboardPageLocators(BasePageLocators):
                               .add_class('center-module-segments'))
 
     NEXT_PAGINATION_BUTTON_ENABLED = locator(XPATH('div')
-                                             .add_class('pagination-module-rightBtn'))
+                                             .add_class('pagination-module-rightBtn')
+                                             .disallow_class('button-module-disabled'))
 
     @staticmethod
     def get_campaign_name_element(campaign_name: str):
@@ -68,12 +76,14 @@ class DashboardPageLocators(BasePageLocators):
 
 
 class SegmentsPageLocators(BasePageLocators):
-
-    CREATE_SEGMENT_FROM_EMPTY_LIST_BUTTON = locator((XPATH('li')
-                                                     .add_class('instruction-module-item')
-                                                     .add_descendant('a')
-                                                     .add_attribute('href',
-                                                                    '/segments/segments_list/new/')))
+    CREATE_SEGMENT_FROM_EMPTY_LIST_LINK = locator((XPATH('div')
+                                                   .add_class('page_segments__instruction-wrap')
+                                                   .add_predicate('[not(contains(@style,"none"))]')
+                                                   .add_descendant('li')
+                                                   .add_class('instruction-module-item')
+                                                   .add_descendant('a')
+                                                   .add_attribute('href',
+                                                                  '/segments/segments_list/new/')))
 
     CREATE_SEGMENT_FROM_LIST_BUTTON = locator((XPATH('div')
                                                .add_class('js-create-button-wrap')
@@ -101,7 +111,8 @@ class SegmentsPageLocators(BasePageLocators):
                             .add_descendant('input'))
 
     NEXT_PAGINATION_BUTTON_ENABLED = locator(XPATH('div')
-                                             .add_class('pagination-module-rightBtn'))
+                                             .add_class('pagination-module-rightBtn')
+                                             .disallow_class('button-module-disabled'))
 
     CONFIRM_REMOVE_BUTTON = locator(XPATH('button')
                                     .add_class('confirm-remove'))
@@ -111,13 +122,13 @@ class SegmentsPageLocators(BasePageLocators):
         return locator(XPATH('div')
                        .add_class('main-module-Cell')
                        .add_attribute(attribute='data-test', value='name', strict_match=False)
-                       .add_predicate(f'[contains(.,"{segment_name}"]'))
+                       .add_predicate(f'[contains(.,"{segment_name}")]'))
 
     @staticmethod
     def get_segment_remove_button(segment_name: str):
         return locator(XPATH('div')
                        .add_class('main-module-Cell')
                        .add_attribute(attribute='data-test', value='name', strict_match=False)
-                       .add_predicate(f'[contains(.,"{segment_name}"]')
+                       .add_predicate(f'[contains(.,"{segment_name}")]')
                        .add_following_sibling()
                        .add_attribute(attribute='data-test', value='remove', strict_match=False))

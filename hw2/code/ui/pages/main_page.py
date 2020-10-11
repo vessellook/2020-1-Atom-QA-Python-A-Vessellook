@@ -24,6 +24,4 @@ class MainPage(BasePage):
 
         submit_button = self.find(self.locators.AUTH_SUBMIT)
         submit_button.click()
-
-        self.click(self.locators.LOGO, 10)
         return DashboardPage(self.driver)
