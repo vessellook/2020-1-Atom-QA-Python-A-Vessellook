@@ -1,4 +1,5 @@
-from urllib.parse import urlparse
+from dataclasses import dataclass
+from typing import Any
 
 from selenium import webdriver
 from selenium.webdriver import ChromeOptions
@@ -29,8 +30,19 @@ def pytest_addoption(parser: Parser):
                      help="pass '--headless True' to start browser in headless mode")
 
 
+@dataclass
+class Settings:
+    browser: str = 'chrome'
+    version: str = 'latest'
+    selenoid: Any = None
+    email: str = EMAIL
+    password: str = PASSWORD
+    headless: bool = True
+    download_dir: str = '/tmp'
+
+
 @pytest.fixture(scope='session')
-def config(request: FixtureRequest):
+def settings(request: FixtureRequest) -> Settings:
     browser = request.config.getoption('--browser')
     version = request.config.getoption('--browser_ver')
     selenoid_opt: str = request.config.getoption('--selenoid')
@@ -44,19 +56,18 @@ def config(request: FixtureRequest):
         headless = False
 
     selenoid = None
+
     if selenoid_opt:
         pos = selenoid_opt.rfind(':')
-        selenoid = selenoid_opt[:pos], int(selenoid_opt[pos+1:])
+        selenoid = selenoid_opt[:pos], int(selenoid_opt[pos + 1:])
 
-    return {
-        'browser': browser,
-        'version': version,
-        'download_dir': '/tmp.txt',
-        'selenoid': selenoid,
-        'email': email,
-        'password': password,
-        'headless': headless
-    }
+    return Settings(browser=browser,
+                    version=version,
+                    selenoid=selenoid,
+                    email=email,
+                    password=password,
+                    headless=headless
+                    )
 
 
 class UnsupportedBrowserException(Exception):
@@ -67,74 +78,51 @@ class ElementNotFoundException(Exception):
     pass
 
 
+class AuthFailedException(Exception):
+    pass
+
+
 @pytest.fixture(scope='function')
-def driver(config):
-    browser = config['browser']
-    version = config['version']
-    download_dir = config['download_dir']
-    selenoid = config['selenoid']
+def driver(settings: Settings):
+    browser = settings.browser
+    version = settings.version
+    download_dir = settings.download_dir
+    selenoid = settings.selenoid
+    headless = settings.headless
 
     if browser == 'chrome':
         options = ChromeOptions()
-        options.add_argument("--window-size=800,600")
-        if config['headless']:
-            options.headless = True
-
         prefs = {"download.default_directory": download_dir}
         options.add_experimental_option('prefs', prefs)
+    elif browser == 'firefox':
+        options = FirefoxOptions()
+    else:
+        raise UnsupportedBrowserException(f'Unsupported browser: "{browser}"')
 
-        if selenoid:
-            host, port = selenoid
-            driver = webdriver.Remote(command_executor=f'http://{host}:{port}/wd/hub/',
-                                      options=options,
-                                      desired_capabilities={'acceptInsecureCerts': True}
-                                      )
-        else:
+    options.headless = headless
+    if selenoid:
+        host, port = selenoid
+        driver = webdriver.Remote(command_executor=f'http://{host}:{port}/wd/hub/',
+                                  options=options,
+                                  desired_capabilities={'acceptInsecureCerts': True}
+                                  )
+    else:
+
+        if browser == 'chrome':
             manager = ChromeDriverManager(version=version)
             driver = webdriver.Chrome(executable_path=manager.install(),
                                       options=options,
                                       desired_capabilities={'acceptInsecureCerts': True}
                                       )
 
-    elif browser == 'firefox':
-        options = FirefoxOptions()
-        if config['headless']:
-            options.headless = True
-
-        if selenoid:
-            host, port = selenoid
-            driver = webdriver.Remote(command_executor=f'http://{host}:{port}/wd/hub/',
-                                      options=options,
-                                      desired_capabilities={'acceptInsecureCerts': True}
-                                      )
-        else:
+        elif browser == 'firefox':
             manager = GeckoDriverManager(version=version)
             driver = webdriver.Firefox(executable_path=manager.install(),
                                        options=options,
                                        desired_capabilities={'acceptInsecureCerts': True}
                                        )
-    else:
-        raise UnsupportedBrowserException(f'Unsupported browser: "{browser}"')
-
-    driver.maximize_window()
-    yield driver
-    driver.quit()
-
-
-@pytest.fixture(scope='function', params=['chrome', 'firefox'])
-def all_drivers(config, request):
-    browser = request.param
-
-    if browser == 'chrome':
-        manager = ChromeDriverManager(version='latest')
-        driver = webdriver.Chrome(executable_path=manager.install())
-
-    elif browser == 'firefox':
-        manager = GeckoDriverManager(version='latest')
-        driver = webdriver.Firefox(executable_path=manager.install())
-
-    else:
-        raise UnsupportedBrowserException(f'Unsupported browser: "{browser}"')
+        else:
+            raise UnsupportedBrowserException(f'Unsupported browser: "{browser}"')
 
     driver.maximize_window()
     yield driver

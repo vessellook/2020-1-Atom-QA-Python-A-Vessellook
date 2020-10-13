@@ -1,6 +1,7 @@
 from ui.locators.basic_locators import MainPageLocators
 from ui.pages.base_page import BasePage
 from ui.pages.dashboard_page import DashboardPage
+import allure
 
 
 class MainPage(BasePage):
@@ -11,6 +12,7 @@ class MainPage(BasePage):
         BasePage.__init__(self, driver)
         self.driver.get(self.url)
 
+    @allure.step('Auth with credentials ({email}, {password}) to target.my.com')
     def auth(self, email: str, password: str) -> DashboardPage:
         self.click(self.locators.AUTH_POPUP_BUTTON, 10)
 
@@ -24,4 +26,6 @@ class MainPage(BasePage):
 
         submit_button = self.find(self.locators.AUTH_SUBMIT)
         submit_button.click()
+        import time
+        time.sleep(10)
         return DashboardPage(self.driver)

@@ -35,7 +35,6 @@ class BasePage:
         self.driver.refresh()
 
     def click(self, locator, timeout=10):
-        # попытки чтобы кликнуть
         for i in range(self.RETRY_COUNT):
             try:
                 self.find(locator)
@@ -48,31 +47,22 @@ class BasePage:
                     pass
         raise
 
-    # def scroll_to_element(self, element):
-    #     # нигде не используется, потому что click сам скролит
-    #     # просто пример возможной реализации
-    #     self.driver.execute_script('arguments[0].scrollIntoView(true);', element)
-
     def wait(self, timeout=None) -> WebDriverWait:
         if timeout is None:
             timeout = 10
         return WebDriverWait(self.driver, timeout=timeout)
 
-    def count_elements(self, locator, count, timeout=1):
-        """этот метод считает количество элементов на странице
-
-        until принимает функцию, а значит мы можем написать и использовать свою,
-        в нашем случае это lambda функция
-        в этом методе мы ожидаем пока не появится нужное нам количество элементов на странице
-        """
-        self.wait(timeout).until(lambda browser: len(browser.find_elements(*locator)) == count)
-
-    def input(self, locator, text, click: bool = True):
-        input_element = self.find(locator, 10)
+    def input(self, locator, text, timeout: int = 10, click: bool = True):
+        input_element = self.find(locator, timeout)
         if click:
-            self.click(locator, 10)
+            self.click(locator, timeout)
             input_element.clear()
         input_element.send_keys(text)
 
-    def get_title(self) -> str:
+    @property
+    def title(self) -> str:
         return self.driver.title
+
+    @property
+    def url(self):
+        return self.driver.current_url

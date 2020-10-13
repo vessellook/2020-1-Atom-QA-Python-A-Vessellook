@@ -1,8 +1,10 @@
+import allure
+
 from ui.locators.basic_locators import DashboardPageLocators
 from ui.pages.base_page import BasePage
 from ui.pages.create_campaign_page import CreateCampaignPage
 from ui.pages.segments_page import SegmentsPage
-from conftest import ElementNotFoundException
+from conftest import ElementNotFoundException, AuthFailedException
 from time import sleep
 
 
@@ -10,8 +12,11 @@ class DashboardPage(BasePage):
     locators = DashboardPageLocators()
 
     def __init__(self, driver):
+        if 'dashboard' not in driver.current_url:
+            raise AuthFailedException
         BasePage.__init__(self, driver)
 
+    @allure.step('Open CreateCampaignPage')
     def create_campaign(self) -> CreateCampaignPage:
         if self.has(self.locators.CREATE_CAMPAIGN_INTRODUCTION_LINK, timeout=10):
             self.click(self.locators.CREATE_CAMPAIGN_INTRODUCTION_LINK, timeout=10)
@@ -19,9 +24,6 @@ class DashboardPage(BasePage):
             self.click(self.locators.CREATE_CAMPAIGN_BUTTON, timeout=10)
         sleep(10)
         return CreateCampaignPage(self.driver)
-
-    def is_url_matches(self, url):
-        return url in self.driver.current_url
 
     def has_campaign(self, campaign_name: str) -> bool:
         locator = self.locators.get_campaign_name_element(campaign_name)

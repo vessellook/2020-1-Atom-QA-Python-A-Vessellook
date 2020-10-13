@@ -1,6 +1,7 @@
 from ui.pages.base_page import BasePage
 from ui.locators.basic_locators import SegmentsPageLocators
 from conftest import ElementNotFoundException
+import allure
 
 
 class SegmentsPage(BasePage):
@@ -9,6 +10,7 @@ class SegmentsPage(BasePage):
     def __init__(self, driver):
         BasePage.__init__(self, driver)
 
+    @allure.step("create segment with name {segment_name}")
     def create_segment(self, segment_name: str) -> None:
         if self.has(self.locators.CREATE_SEGMENT_FROM_EMPTY_LIST_LINK):
             self.click(self.locators.CREATE_SEGMENT_FROM_EMPTY_LIST_LINK, timeout=10)
@@ -32,6 +34,7 @@ class SegmentsPage(BasePage):
             self.click(button_locator, timeout=10)
         return False
 
+    @allure.step("remove segment with name {segment_name}")
     def remove_segment(self, segment_name: str) -> None:
         locator = self.locators.get_segment_remove_button(segment_name)
         button_locator = self.locators.NEXT_PAGINATION_BUTTON_ENABLED

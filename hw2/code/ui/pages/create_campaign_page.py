@@ -2,7 +2,6 @@ from ui.locators.create_campaign_page_locators import CreateCampaignPageLocators
 from ui.pages.base_page import BasePage
 import os.path
 from ui.pages import dashboard_page
-from time import sleep
 
 
 class CreateCampaignPage(BasePage):
@@ -15,12 +14,12 @@ class CreateCampaignPage(BasePage):
         return 'target.my.com/campaign/new' in self.driver.current_url
 
     def fill_campaign(self, campaign_name: str, sum_per_day: int, total_sum: int):
-        self.input(self.locators.INPUT_LINE['CAMPAIGN_NAME'], campaign_name)
-        self.input(self.locators.INPUT_LINE['TOTAL_SUM'], total_sum)
+        self.input(self.locators.INPUT_LINE['CAMPAIGN_NAME'], campaign_name, timeout=30)
+        self.input(self.locators.INPUT_LINE['TOTAL_SUM'], total_sum, timeout=30)
         self.input(self.locators.INPUT_LINE['SUM_PER_DAY'], sum_per_day)
 
     def social_engagement(self, post_url: str, campaign_name: str, sum_per_day: int, total_sum: int):
-        self.click(self.locators.SOCIAL_ENGAGEMENT_BUTTON, timeout=20)
+        self.click(self.locators.SOCIAL_ENGAGEMENT_BUTTON, timeout=30)
         self.input(self.locators.INPUT_LINE['URL'], post_url)
         self.fill_campaign(campaign_name, sum_per_day, total_sum)
 
@@ -35,14 +34,14 @@ class CreateCampaignPage(BasePage):
                 campaign_name: str,
                 sum_per_day: int,
                 total_sum: int) -> 'dashboard_page.DashboardPage':
-        self.click(self.locators.TRAFFIC_BUTTON, timeout=10)
+        self.click(self.locators.TRAFFIC_BUTTON, timeout=30)
         self.input(self.locators.INPUT_LINE['URL'], site_url)
-        sleep(10)
         self.fill_campaign(campaign_name, sum_per_day, total_sum)
         carousel = Carousel(self)
         carousel.choose(mobile=True, desktop=False)
-        carousel.add_banner('test', os.path.abspath('../res/img.jpg'))
-        self.click(self.locators.CREATE_CAMPAIGN_BUTTON, timeout=20)
+        path_to_img = '/'.join(os.path.abspath(__file__).split('/')[:-4] + ['res', 'img.jpg'])
+        carousel.add_banner('test', path_to_img)
+        self.click(self.locators.CREATE_CAMPAIGN_BUTTON, timeout=30)
         return dashboard_page.DashboardPage(self.driver)
 
 
