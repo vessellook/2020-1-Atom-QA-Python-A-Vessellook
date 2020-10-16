@@ -10,13 +10,17 @@ def test_auth(my_target_client: MyTargetClient):
 
 
 @pytest.mark.API
-def test_create(my_target_client: MyTargetClient):
-    segment_name = generate_segment_name()
+# for multithreading
+@pytest.mark.parametrize("prefix", ["first", "second", "third"])
+def test_create(my_target_client: MyTargetClient, prefix: str):
+    segment_name = generate_segment_name(prefix)
     my_target_client.create_segment(segment_name)
 
 
 @pytest.mark.API
-def test_delete(my_target_client: MyTargetClient):
-    segment_name = generate_segment_name()
+# for multithreading
+@pytest.mark.parametrize("prefix", ["first", "second", "third"])
+def test_delete(my_target_client: MyTargetClient, prefix: str):
+    segment_name = generate_segment_name(prefix)
     segment_id = my_target_client.create_segment(segment_name)
     my_target_client.delete_segment(segment_id)
