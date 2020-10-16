@@ -4,7 +4,8 @@ from logging import Logger
 import allure
 import requests
 
-from api.exceptions import WrongResponseStatusCodeException, CsrfTokenNotReceivedException
+from api.exceptions import WrongResponseStatusCodeException, CsrfTokenNotReceivedException, \
+    JsonBadFormatException
 
 
 def print_response(response):
@@ -27,17 +28,21 @@ class MyTargetClient:
     @allure.step('auth to target.my.com')
     def auth(self):
         """Creates request to target.my.com to get access to user's account and to manage user's data"""
-        self._request('GET', 'https://target.my.com/')
-        self._request('POST', 'https://auth-ac.my.com/auth',
+        main_page_url = 'https://target.my.com/'
+        auth_url = 'https://auth-ac.my.com/auth'
+        continue_url = 'https://target.my.com/auth/mycom?state=target_login%3D1#email'
+
+        self._request('GET', main_page_url)
+        self._request('POST', auth_url,
                       headers={'Content-Type': 'application/x-www-form-urlencoded',
-                               'Referer': 'https://target.my.com/'
+                               'Referer': main_page_url
                                },
                       data={
                           'email': self.email,
                           'password': self.password,
-                          'continue': 'https://target.my.com/auth/mycom?state=target_login%3D1#email'
+                          'continue': continue_url
                       })
-        self._request_token()
+        self.csrf_token = self._request_token()
 
     @allure.step('create segment with name {segment_name}')
     def create_segment(self, segment_name) -> int:
@@ -60,7 +65,10 @@ class MyTargetClient:
                                        }]
                                        },
                                  is_json=True)
-        return response.json()['id']
+        response_json = response.json()
+        if 'id' not in response_json:
+            raise JsonBadFormatException('no "id" in json')
+        return response_json['id']
 
     @allure.step('create segment with id {segment_id}')
     def delete_segment(self, segment_id):
@@ -84,17 +92,21 @@ class MyTargetClient:
                                  })
         json_object = json.loads(response.text)
         result = []
+        if 'items' not in json_object:
+            raise JsonBadFormatException('no "items" in json')
         for item in json_object['items']:
+            if 'id' not in item:
+                raise JsonBadFormatException('no "id" in json')
             result.append(item['id'])
         return result
 
     def _request_token(self):
-        response = self._request('GET', 'https://target.my.com/csrf/')
+        csrf_url = 'https://target.my.com/csrf/'
+        response = self._request('GET', csrf_url)
         cookies = response.cookies.get_dict()
         if 'csrftoken' not in cookies:
             raise CsrfTokenNotReceivedException
-        self.csrf_token = cookies['csrftoken']
-        return self.csrf_token
+        return cookies['csrftoken']
 
     def _request(self,
                  method: str,
@@ -118,6 +130,7 @@ class MyTargetClient:
         return response
 
     def _log(self, response):
+        """Logging format"""
         self.logger.info('START REQUEST')
         self.logger.info(f'status code = {response.status_code}')
         self.logger.info(f'URL = {response.url}')

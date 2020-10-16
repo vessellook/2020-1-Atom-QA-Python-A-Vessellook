@@ -10,3 +10,7 @@ class WrongResponseStatusCodeException(Exception):
 
 class CsrfTokenNotReceivedException(Exception):
     pass
+
+
+class JsonBadFormatException(Exception):
+    pass
