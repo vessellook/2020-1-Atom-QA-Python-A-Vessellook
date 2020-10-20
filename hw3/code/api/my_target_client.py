@@ -1,5 +1,6 @@
 import json
 from logging import Logger
+from typing import List
 
 import allure
 import requests
@@ -8,16 +9,9 @@ from api.exceptions import WrongResponseStatusCodeException, CsrfTokenNotReceive
     JsonBadFormatException
 
 
-def print_response(response):
-    print('\n', response.url)
-    print(response.status_code)
-    print(response.request.headers)
-    print(response.headers)
-    print(response.cookies.get_dict())
-    print(response.text[:1000])
-
-
 class MyTargetClient:
+    MAX_VALUE_LIMIT = 500
+
     def __init__(self, logger: Logger, email: str, password: str):
         self.logger = logger
         self.session = requests.session()
@@ -81,9 +75,37 @@ class MyTargetClient:
                       },
                       status_code=204)
 
+    @allure.step('check segment presence with id {segment_id}')
+    def has_segment(self, segment_id) -> bool:
+        count = self._get_segment_count()
+        response_count = (count - 1) // self.MAX_VALUE_LIMIT + 1
+        for i in range(response_count):
+            segment_id_list = self._get_segment_id_list(limit=self.MAX_VALUE_LIMIT,
+                                                        offset=self.MAX_VALUE_LIMIT * i)
+            try:
+                segment_id_list.index(segment_id)
+                return True
+            except ValueError:
+                pass
+        return False
+
+    @allure.step('get count of segments')
+    def _get_segment_count(self) -> int:
+        url = f'https://target.my.com/api/v2/remarketing/segments.json'
+        referer = 'https://target.my.com/segments/segments_list'
+        response = self._request('GET', url,
+                                 headers={
+                                     'X-CSRFToken': self.csrf_token,
+                                     'Referer': referer
+                                 })
+        json_object = json.loads(response.text)
+        if 'count' not in json_object:
+            raise JsonBadFormatException('no "count" in json')
+        return int(json_object['count'])
+
     @allure.step('get list of segments')
-    def get_segments_list(self, limit: int):
-        url = f'https://target.my.com/api/v2/remarketing/segments.json?limit={limit}'
+    def _get_segment_id_list(self, limit: int = 20, offset: int = 0) -> List[int]:
+        url = f'https://target.my.com/api/v2/remarketing/segments.json?limit={limit}&offset={offset}'
         referer = 'https://target.my.com/segments/segments_list'
         response = self._request('GET', url,
                                  headers={
@@ -97,7 +119,7 @@ class MyTargetClient:
         for item in json_object['items']:
             if 'id' not in item:
                 raise JsonBadFormatException('no "id" in json')
-            result.append(item['id'])
+            result.append(int(item['id']))
         return result
 
     def _request_token(self):
