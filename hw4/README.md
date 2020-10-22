@@ -5,6 +5,7 @@
 Все bash скрипты лежат в папке scripts/
 
 ### count.sh (tasks 1-2)
+<pre>
 Скрипт count.sh выполняет подсчёт логов
 Опции:
   -p PATH
@@ -23,9 +24,10 @@ scripts/count.sh < logs/access.log
 
 scripts/count.sh -p logs/ -m POST
 
-scritps/count.sh < logs/big.access.log -c 4
-
+scripts/count.sh < logs/big.access.log -c 4
+</pre>
 ### top.sh (задания 3-5)
+<pre>
 Скрипт top.sh выполняет фильтрацию и сортировку логов
 Опции:
   -p PATH
@@ -51,3 +53,4 @@ scripts/top.sh -c 4 -s LOCATION < logs/big.access.log
 scripts/top.sh -c 5 -s SIZE -p logs/access.log
 
 scripts/top.sh -m POST -c 404 -o output.txt < logs/
+</pre>
