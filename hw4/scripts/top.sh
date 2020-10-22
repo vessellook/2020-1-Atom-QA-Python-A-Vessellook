@@ -8,8 +8,6 @@ Usage: $0 [FILE]
 OPTIONS
   -p PATH
       Set path to logs. This script uses /dev/stdin by default
-  -o OUTPUT
-      Set file for output. This script uses /dev/stdout by default
   -c CODE
       Filter output by status code
       Examples:
@@ -17,6 +15,10 @@ OPTIONS
             -c 403   filter all requests with 403 error
   -m METHOD
       Filter output by HTTP method
+  -h
+      Show this help and exit
+  -o OUTPUT
+      Set file for output. This script uses /dev/stdout by default
   -s SORT_BY
       Set sorting. Available values are
         SIZE
@@ -27,8 +29,6 @@ OPTIONS
       Set maximal count of lines in output
   -f FILLER
       Set filler for output. Default value is space
-  -h
-      Show this help and exit 
 EOF
 }
 

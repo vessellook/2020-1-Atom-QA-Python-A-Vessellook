@@ -6,8 +6,8 @@ cat << EOF
 Count filtered lines in NGINX logs
 Usage: $0 [FILE]
 OPTIONS
-  -p PATH or -p DIRECTORY
-      Set path to logs. If you pass DIRECTORY, it uses all files with prefix '.log'. This script uses /dev/stdin by default
+  -p PATH
+      Set path to logs. This script uses /dev/stdin by default
   -c CODE
       Filter output by status code
       Examples:
@@ -33,7 +33,7 @@ while getopts :p:o:c:m:h opt; do
 	esac;
 done
 
-if [[ -z $method && -z $code ]]; then wc -l < $path > $output; exit 0; fi
+if [[ -z $method && -z $code ]]; then wc -l < $path; exit 0; fi
 
 if [[ $(file $path ) = *dir* ]]
   then
@@ -42,5 +42,5 @@ if [[ $(file $path ) = *dir* ]]
 fi |
 if [ -z $code   ]; then cat; else ./filter.sh -c $code  ; fi |
 if [ -z $method ]; then cat; else ./filter.sh -m $method; fi |
-wc -l > $output
+wc -l
 
