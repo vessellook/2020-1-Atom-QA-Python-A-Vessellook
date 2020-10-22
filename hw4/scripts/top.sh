@@ -58,7 +58,11 @@ while getopts :s:p:o:m:c:l:f:h opt; do
 	esac;
 done
 
-./parse.sh < $path |
+if [[ $(file $path ) = *dir* ]]
+  then
+    cat $(find $path -maxdepth 1 -type f -name *.log) | ./parse.sh
+  else ./parse.sh < $path
+fi |
 if [ -z $code   ]; then cat; else ./filter.sh -c $code  ; fi |
 if [ -z $method ]; then cat; else ./filter.sh -m $method; fi |
 if [[ ! -z $order && $order = LOCATION ]]
@@ -73,5 +77,5 @@ elif [[ ! -z $order && $order = SIZE  ]]
     sort -t'|' -k5 -rn;
 else cat;
 fi |
-if [ -z $limit ]; then cat; else head -n $limit | format $filler > $output
+if [ -z $limit ]; then cat; else head -n $limit; fi | format $filler > $output
 

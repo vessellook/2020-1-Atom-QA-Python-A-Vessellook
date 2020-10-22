@@ -8,7 +8,7 @@
 Скрипт count.sh выполняет подсчёт логов
 Опции:
   -p PATH
-      Задаёт путь к логам. Если путь не задан, то ожидает ввод со стандартного потока
+      Задаёт путь к логам. Если директория, то логи собираются из всех файлов. Если путь не задан, то ожидает ввод со стандартного потока
   -o OUTPUT
       Задаёт файл для вывода. Если файл не задан, то выводит результат в стандартный поток вывода
   -c CODE
@@ -21,7 +21,7 @@
 Примеры:
 scripts/count.sh < logs/access.log
 
-scripts/count.sh -p logs/access.log -m POST
+scripts/count.sh -p logs/ -m POST
 
 scritps/count.sh < logs/big.access.log -c 4
 
@@ -50,4 +50,4 @@ scripts/top.sh -c 4 -s LOCATION < logs/big.access.log
 
 scripts/top.sh -c 5 -s SIZE -p logs/access.log
 
-scripts/top.sh -m POST -c 404 -o output.txt < logs/access.log
+scripts/top.sh -m POST -c 404 -o output.txt < logs/

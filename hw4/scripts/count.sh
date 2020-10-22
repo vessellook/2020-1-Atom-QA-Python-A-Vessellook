@@ -3,11 +3,11 @@
 usage() {
 # heredoc
 cat << EOF
-Aggregate NGINX logs
+Count filtered lines in NGINX logs
 Usage: $0 [FILE]
 OPTIONS
   -p PATH or -p DIRECTORY
-      Set path to logs. This script uses /dev/stdin by default
+      Set path to logs. If you pass DIRECTORY, it uses all files with prefix '.log'. This script uses /dev/stdin by default
   -c CODE
       Filter output by status code
       Examples:
@@ -35,4 +35,12 @@ done
 
 if [[ -z $method && -z $code ]]; then wc -l < $path > $output; exit 0; fi
 
-./parse.sh < $path | ./filter.sh -c $code | ./filter.sh -m $method | wc -l > $output
+if [[ $(file $path ) = *dir* ]]
+  then
+    cat $(find $path -maxdepth 1 -type f -name *.log) | ./parse.sh
+  else ./parse.sh < $path
+fi |
+if [ -z $code   ]; then cat; else ./filter.sh -c $code  ; fi |
+if [ -z $method ]; then cat; else ./filter.sh -m $method; fi |
+wc -l > $output
+
