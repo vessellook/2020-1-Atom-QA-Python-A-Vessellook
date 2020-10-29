@@ -1,7 +1,6 @@
 import pymysql
 from pymysql.cursors import DictCursor
 
-from names import RAW_QUERIES_DB
 from names import LOGS_TABLE, ID_F, LOCATION_F, METHOD_F, IP_F
 from names import STATUS_CODE_F, RESPONSE_SIZE_F, DATETIME_F
 from utils import LogsRecord, InvalidIdException
@@ -27,8 +26,8 @@ class MysqlClient:
     def connect(self):
         connection = self.get_connection()
 
-        connection.query(f'DROP DATABASE IF EXISTS {RAW_QUERIES_DB}')
-        connection.query(f'CREATE DATABASE {RAW_QUERIES_DB}')
+        connection.query(f'DROP DATABASE IF EXISTS {self.db_name}')
+        connection.query(f'CREATE DATABASE {self.db_name}')
 
         connection.close()
 

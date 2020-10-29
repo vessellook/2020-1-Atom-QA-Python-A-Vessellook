@@ -1,10 +1,7 @@
 import sqlalchemy
-from names import LOGS_TABLE, ID_F, LOCATION_F, METHOD_F, IP_F
-from names import STATUS_CODE_F, RESPONSE_SIZE_F, DATETIME_F
 
 from sqlalchemy.orm import sessionmaker
 
-from names import ORM_QUERIES_DB
 from utils import LogsRecord
 from models.models import Base, OrmLogsRecord
 from names import LOGS_TABLE
@@ -34,8 +31,8 @@ class MysqlOrmClient:
 
     def connect(self):
         connection = self.get_connection(db_created=False)
-        connection.execute(f'DROP DATABASE IF EXISTS {ORM_QUERIES_DB}')
-        connection.execute(f'CREATE DATABASE {ORM_QUERIES_DB}')
+        connection.execute(f'DROP DATABASE IF EXISTS {self.db_name}')
+        connection.execute(f'CREATE DATABASE {self.db_name}')
         connection.close()
         return self.get_connection(db_created=True)
 
