@@ -9,13 +9,14 @@ from typing import List, TextIO
 from utils import LogsRecord
 from mysql_orm_client.mysql_orm_client import MysqlOrmClient
 
-from names import MAIN_DB, RAW_QUERIES_DB
+from names import MAIN_DB
 
 
 def get_parser():
     parser = ArgumentParser()
     parser.add_argument(type=FileType('r'), metavar='LOGS_PATH', dest='logs_files', action='append',
                         help='Set path to NGINX logs')
+    parser.add_argument('--port', type=int, help='mysql port')
     return parser
 
 
@@ -40,7 +41,7 @@ def main():
     logs_records: List[LogsRecord] = []
     for file in args.logs_files:
         logs_records += parse_logs(file)
-    client = MysqlOrmClient(user='root', password='pass', db_name=MAIN_DB, port=3306)
+    client = MysqlOrmClient(user='root', password='pass', db_name=MAIN_DB, port=args.port if args.port else 3306)
     client.create_nginx_logs()
     for r in logs_records:
         client.add_record(r)
