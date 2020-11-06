@@ -16,7 +16,7 @@ class HttpRequest:
         request = f'{self.method} {self.location} HTTP/{self.version}\n'
         if self.body is not None:
             self.headers['Content-Length'] = len(self.body.encode(encoding='UTF-8'))
-        request += '\n'.join([f'{header}: {value}' for header, value in self.headers])
+        request += '\n'.join([f'{header}: {value}' for header, value in self.headers.items()])
         request += '\n\n'
         if self.body is not None:
             request += self.body

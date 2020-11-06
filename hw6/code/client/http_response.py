@@ -17,7 +17,7 @@ class HttpResponse:
     @staticmethod
     def from_str(message: str):
         lines = message.split('\n')
-        _, version, status_code, _ = re.split(r'HTTP/(.*) (.*) .*', lines[0])
+        _, version, status_code, _ = re.split(r'HTTP/(.*) ([2-5][0-9]{2}) .*', lines[0])
         body = None
         headers = {}
         for num, line in enumerate(lines[1:]):
@@ -27,7 +27,7 @@ class HttpResponse:
             header = line[:line.index(':')]
             value = line[line.index(':') + 1:].strip()
             headers[header] = value
-        return HttpResponse(status_code=status_code,
+        return HttpResponse(status_code=int(status_code),
                             headers=headers,
                             body=body,
                             version=version)
