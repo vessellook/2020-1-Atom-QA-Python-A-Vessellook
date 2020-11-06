@@ -31,7 +31,7 @@ class AppHandler(MyHandler):
                 post_data = self.rfile.read(content_length)
                 obj = unjsonify(post_data)
                 token = obj['token']
-                message = obj['message']
+                message = str(obj['message'])
                 headers = {}
                 if 'Authorization' in self.headers:
                     headers['Authorization'] = self.headers['Authorization']
