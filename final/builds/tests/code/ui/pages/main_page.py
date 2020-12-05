@@ -2,7 +2,6 @@ from typing import Optional
 from urllib.parse import urlparse
 
 import allure
-import pytest_check as check
 from selenium.common.exceptions import StaleElementReferenceException
 
 import ui.locators.main_page_locators as locators
@@ -14,7 +13,7 @@ class MainPage(BasePage):
     locators = locators
 
     def make_request(self):
-        self.make_request_base(url=f'http://{self.settings.app_netloc}/welcome')
+        self.make_request_base(url=f'http://{self.settings.app_ui_netloc}/welcome')
 
     @allure.step("Logout (website redirect you to authorization page)")
     def logout(self) -> 'authorization_page.AuthorizationPage':
@@ -37,11 +36,8 @@ class MainPage(BasePage):
         except StaleElementReferenceException:
             return None
 
-    def check_url_negative(self, msg: str = ''):
-        check.is_not_in('welcome', urlparse(self.driver.current_url).path, msg)
-
     def check_url(self, msg: str = ''):
-        check.is_in('welcome', urlparse(self.driver.current_url).path, msg)
+        assert 'welcome' in urlparse(self.driver.current_url).path, msg
 
     @staticmethod
     def is_opened(driver):
