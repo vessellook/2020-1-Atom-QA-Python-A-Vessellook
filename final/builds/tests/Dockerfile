@@ -12,12 +12,8 @@ RUN mkdir /my_tests
 
 WORKDIR /my_tests
 
-COPY code /my_tests
+COPY run_in_docker.sh /my_tests
 
-CMD [ "pytest", "-l", "-s", "-vv", "-rA",
-               "--alluredir=/alluredir",
-               "--clean-alluredir",
-#              "-m", "mixed",
-#              "-n", '3',
-               "--video-enable"
-    ]
+CMD /my_tests/run_in_docker.sh
+
+COPY code /my_tests

@@ -15,7 +15,7 @@ class RegistrationError(Exception):
 
 class RegistrationPage(BasePage):
     def make_request(self):
-        self.make_request_base(url=f'http://{self.settings.app_netloc}/reg')
+        self.make_request_base(url=f'http://{self.settings.app_ui_netloc}/reg')
 
     @allure.step("Register with credentials ({username}, {email}, {password})")
     def pass_registration(self, username: str, email: str,
@@ -34,7 +34,7 @@ class RegistrationPage(BasePage):
             self.click(locators.SUBMIT_BUTTON)
             try:
                 self.wait(self.load_time).until(main_page.MainPage.is_opened)
-            except WebDriverException as e:
+            except WebDriverException as err:
                 if self.has(locators.WARNING_TAG):
                     allure.attach(self.find(locators.WARNING_TAG).text,
                                   name='warning',
@@ -43,7 +43,7 @@ class RegistrationPage(BasePage):
                     self.make_screenshot(f'pass_registration-username={username}-except.png'),
                     name='in except block',
                     attachment_type=allure.attachment_type.PNG)
-                raise RegistrationError(e.msg)
+                raise RegistrationError from err
         return main_page.MainPage(self.driver, self.settings)
 
     @allure.step("Go to authorization page from registration page")
@@ -57,4 +57,4 @@ class RegistrationPage(BasePage):
 
     @staticmethod
     def is_opened(driver):
-        return '/reg' == urlparse(driver.current_url).path
+        return urlparse(driver.current_url).path == '/reg'

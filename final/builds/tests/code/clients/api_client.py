@@ -1,5 +1,6 @@
 """Module with class to call myapp API functions"""
 from collections import namedtuple
+from typing import Optional
 
 import allure
 import requests
@@ -8,13 +9,16 @@ import requests
 class ApiClient:
     """Class to connect to call myapp API functions"""
     Keys = namedtuple('Keys', 'session agent')
+    netloc = ''
+    admin_keys = Keys('', '')
 
-    def __init__(self, admin_keys: Keys, netloc, timeout=2):
+    def __init__(self, keys: Optional[Keys], timeout=2):
         """Session cookie and User-Agent header require to authorized access"""
         self._timeout = timeout
-        self.cookies = {'session': admin_keys.session}
-        self.headers = {'User-Agent': admin_keys.agent}
-        self.netloc = netloc
+        if keys is None:
+            keys = self.admin_keys
+        self.cookies = {'session': keys.session}
+        self.headers = {'User-Agent': keys.agent}
 
     @allure.step('Call add_user API function of myapp')
     def add_user(self, username: str, email: str, password: str) -> requests.Response:

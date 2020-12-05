@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 import requests
 
 from utils.citations import wisdom_citations
-from utils.not_raises import not_raises
+from utils.common import change_netloc
 from settings import Settings
 from ui.pages.registration_page import RegistrationPage, RegistrationError
 from ui.pages.authorization_page import AuthorizationPage, AuthorizationError
@@ -57,8 +57,8 @@ def check_all_sources_exist(page: BasePage, page_name, msg=''):
         try:
             with allure.step(f'Check url {url}'):
                 # allure step to check single url
-                response = requests.get(url, cookies=cookies, headers=headers,
-                                         timeout=1)
+                response = requests.get(change_netloc(url, page.settings.app_api_netloc),
+                                        cookies=cookies, headers=headers, timeout=1)
                 assert response.status_code == 200
         except AssertionError:
             all_right = False
@@ -203,9 +203,11 @@ class TestMainPage:
         assert session is not None
         char = session[5].swapcase() if session[5].isascii() else 'X'
         session = session[:5] + char + session[6:]
-        response = requests.get(main_page.current_url, cookies={'session': session},
-                                 headers={'User-Agent': main_page.user_agent}, timeout=1,
-                                 allow_redirects=False)
+        response = requests.get(change_netloc(main_page.current_url,
+                                              main_page.settings.app_api_netloc),
+                                cookies={'session': session},
+                                headers={'User-Agent': main_page.user_agent}, timeout=1,
+                                allow_redirects=False)
         check.not_equal(response.status_code, 200)
 
     @pytest.mark.UI
@@ -220,12 +222,14 @@ class TestMainPage:
         username = main_page.username
         mock_client.set_vk_id(username, vk_id)
         main_page.refresh()
-        with not_raises(WebDriverException, 'vk_id element not found'):
+        try:
             check.equal(main_page.vk_id, vk_id)
+        except WebDriverException as err:
+            raise AssertionError('vk_id element not found') from err
 
     @allure.step('Check all links on the page')
     @pytest.mark.UI
-    @pytest.mark.video_enable
+    @pytest.mark.enable_video
     def test_other_page_urls(self, main_page: MainPage, settings: Settings):
         @allure.step('Check link on the page')
         def check_url1(locator, error_msg=''):
@@ -266,7 +270,7 @@ class TestMainPage:
             main_page.make_request()
 
         driver = main_page.driver
-        link_locators = main_page.locators.LINKS
+        link_locators = main_page.locators
         with check.check:
             check_url1(link_locators.API, 'invalid url for API link')
         with check.check:

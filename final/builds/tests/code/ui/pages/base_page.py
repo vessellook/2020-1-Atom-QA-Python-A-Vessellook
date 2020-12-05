@@ -2,7 +2,7 @@ import time
 from typing import Optional
 
 import allure
-from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
@@ -49,18 +49,16 @@ class BasePage:
         self.wait(self.load_time).until(conditions.staleness_of(html))
 
     def click(self, locator, timeout=20):
-        for i in range(self.RETRY_COUNT):
+        for _ in range(self.RETRY_COUNT):
             try:
                 self.find(locator)
                 element = self.wait(timeout=timeout if timeout is not None else 20).until(
                     conditions.element_to_be_clickable(locator))
                 element.click()
                 return
-
             except StaleElementReferenceException:
-                if i < self.RETRY_COUNT - 1:
-                    pass
-        raise
+                pass
+        raise StaleElementReferenceException
 
     def wait(self, timeout=None) -> WebDriverWait:
         return WebDriverWait(self.driver, timeout=timeout if timeout is not None else 20)
@@ -89,8 +87,7 @@ class BasePage:
     def session_cookie(self) -> Optional[str]:
         try:
             return self.driver.get_cookie('session')['value']
-        except Exception as e:
-            print(e.__class__)
+        except WebDriverException:
             pass
 
     @property

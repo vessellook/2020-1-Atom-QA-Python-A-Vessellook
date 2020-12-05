@@ -113,7 +113,8 @@ class TestBlock:
         pytest.param("2URYaA7ebE", "64AIR1LVJjJ_CEpbIR@YnUbudscDZzHQ.qx_wK", "S83adQxS6jGltbzR0w"),
         pytest.param("PLKapvmJTRpKerTsh", "PCzaRwYlMitt8@corp.mail.ru", "40GJGhVClBLO69DctqQ"),
         pytest.param("AnRY07pepWosuWi9", "IH1Jsht9U6e60MJpNNs@czwPpmi0HNHzPETQ.0vQj1",
-                     "yQMmMzi6MAjLN' or 1 = 1 '; DROP DATABASE; --", id="sql injection in password"),
+                     "yQMmMzi6MAjLN' or 1 = 1 '; DROP DATABASE; --",
+                     id="sql injection in password"),
     ])
     def test_added_users(self, username, email, password, api_client: ApiClient):
         """Add and delete users
@@ -140,7 +141,8 @@ class TestAccept:
         pytest.param("R_4uFz3zDYO2Y", "fq69Dfjhw9MJXfc@FpGgyxUfKqd.b6Nv", "wnCf0CvS1oibfY_N"),
         pytest.param("lM_9nXk6FC8eCDdu", "oS8sXS3iQDWB7lQf@corp.mail.ru", "in4NMj2A_OFxMkA"),
         pytest.param("sHctkbP27IiZFR", "c0bmefgdcajxiL22kD_@yS_jK_k0ZoX5K7r.wNtP",
-                     "tXJL1_dD60TvUUC_6ksp' or 1 = 1 '; DROP DATABASE; --", id="sql injection in password")
+                     "tXJL1_dD60TvUUC_6ksp' or 1 = 1 '; DROP DATABASE; --",
+                     id="sql injection in password")
     ])
     def test_added_users(self, username, email, password, api_client: ApiClient):
         """Add and delete users

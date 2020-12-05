@@ -4,7 +4,6 @@ import requests
 from selenium.common.exceptions import WebDriverException
 import pytest
 
-from utils.not_raises import not_raises
 from clients.api_client import ApiClient
 from ui.pages.registration_page import RegistrationPage, RegistrationError
 from ui.pages.authorization_page import AuthorizationPage, AuthorizationError
@@ -14,19 +13,18 @@ from utils import make, status_codes
 @pytest.mark.mixed
 def test_add_some_path(api_client: ApiClient):
     response = requests.get(f'http://{api_client.netloc}/haha', timeout=0.5,
-                             cookies=api_client.cookies, headers=api_client.headers)
+                            cookies=api_client.cookies, headers=api_client.headers)
     assert response.status_code == 404
 
 
 @pytest.mark.mixed
-def test_api_after_registration(registration_page: RegistrationPage, settings):
+def test_api_after_registration(registration_page: RegistrationPage):
     username, email, password = make.auth_data()
     main_page = registration_page.pass_registration(username=username, email=email,
                                                     password=password)
     assert main_page.session_cookie is not None
-    api_client = ApiClient(admin_keys=ApiClient.Keys(main_page.session_cookie,
-                                                     main_page.user_agent),
-                           netloc=settings.app_netloc)
+    api_client = ApiClient(keys=ApiClient.Keys(main_page.session_cookie,
+                                               main_page.user_agent))
     response = api_client.accept_user(username)
     assert response.status_code != status_codes.NOT_AUTHORIZED
 
@@ -35,10 +33,12 @@ def test_api_after_registration(registration_page: RegistrationPage, settings):
 def test_ui_after_api_add_user(authorization_page: AuthorizationPage,
                                api_client: ApiClient):
     username, email, password = make.auth_data()
-    response = api_client.set_vk_id(username=username, email=email, password=password)
+    response = api_client.add_user(username=username, email=email, password=password)
     assert response.status_code in range(200, 400)
-    with not_raises(WebDriverException):
+    try:
         main_page = authorization_page.authorize(username=username, password=password)
+    except WebDriverException as err:
+        raise AssertionError from err
     assert 'welcome' in urlparse(main_page.current_url).path
 
 

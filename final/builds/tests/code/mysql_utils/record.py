@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from typing import Optional
 
-time_difference = 5
+TIME_DIFFERENCE = 5
 
 
-@dataclass
+@dataclass(eq=False)
 class Record:
     username: str
     email: str
@@ -18,7 +18,7 @@ class Record:
             return False
         if self.start_active_time is not None and record.start_active_time is not None:
             difference = abs(self.start_active_time - record.start_active_time)
-            start_time_equal = difference <= time_difference
+            start_time_equal = difference <= TIME_DIFFERENCE
         else:
             start_time_equal = self.start_active_time is None and record.start_active_time is None
 

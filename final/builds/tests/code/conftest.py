@@ -1,8 +1,11 @@
 """The main configuration file for pytest. See also files in pytest_plugins list"""
+import time
 
 import pytest
+import requests
 from _pytest.config import Config
 from _pytest.config.argparsing import Parser
+from _pytest.fixtures import FixtureRequest
 from selenium import webdriver
 from selenium.webdriver import ChromeOptions
 
@@ -14,12 +17,13 @@ from settings import Settings
 pytest_plugins = ['ui.fixtures', 'clients.fixtures']
 
 
-def pytest_add_option(parser: Parser):
+def pytest_addoption(parser: Parser):
     parser.addoption('--selenoid-netloc', default='selenoid:4444', help='Host and port for selenoid')
-    parser.addoption('--admin-username', default='admin', help="username for admin")
+    parser.addoption('--admin-username', default='administrator', help="username for admin")
     parser.addoption('--admin-email', default='admin@admin.mail.ru', help="email for admin")
     parser.addoption('--admin-password', default='admin_pass', help="password for admin")
-    parser.addoption('--application-netloc', default='proxy:80', help='Host and port for application')
+    parser.addoption('--application-api-netloc', default='proxy:80', help='Host and port for application in api_client')
+    parser.addoption('--application-ui-netloc', default='proxy:80', help='Host and port for application in ui Objects')
     parser.addoption('--mock-netloc', default='mock:5000', help='Host and port for VK API mock')
     parser.addoption('--mysql-host', default='mysql', help='Host for MySQL server')
     parser.addoption('--mysql-port', default=3306, type=int, help='Port for MySQL server')
@@ -29,42 +33,43 @@ def pytest_add_option(parser: Parser):
     parser.addoption('--mysql-password', default='qa_test', help='Password for the user')
     parser.addoption('--screenshots-dir', default='/screenshots', help='Dir for screenshots')
     parser.addoption('--video-dir', default='/video', help='Dir for video')
-    parser.addoption('--video-enable', const=False, action='store_true',
+    parser.addoption('--video-enable', default=False, action='store_true',
                      help='Enable video for UI tests with "enable_video" marker')
     parser.addoption('--time-load-page', default=20, help='Max time to load page')
     parser.addoption('--time-input-text', default=20, help='Max time to input some text')
+    parser.addoption('--not-receive-admin-keys', default=False, action='store_true',
+                     help="this flag should be used if you don't want to run tests")
 
 
 @pytest.fixture(scope='session')
-def settings(config: Config):
-    return Settings(
-        selenoid_netloc=config.getoption('--selenoid-netloc'),
-        admin_username=config.getoption('--admin_username'),
-        admin_email=config.getoption('--admin_email'),
-        admin_password=config.getoption('--admin_password'),
-        app_netloc=config.getoption('--application-netloc'),
-        mock_netloc=config.getoption('--mock-netloc'),
-        mysql_host=config.getoption('--mysql-host'),
-        mysql_port=config.getoption('--mysql_port'),
-        mysql_database=config.getoption('--mysql-database'),
-        mysql_user=config.getoption('--mysql-user'),
-        mysql_password=config.getoption('--mysql-password'),
-        screenshots_dir=config.getoption('--screenshots-dir'),
-        video_dir=config.getoption('--video-dir'),
-        video_enable=config.getoption('--video-enable'),
-        time_load_page=config.getoption('--time-load-page'),
-        time_input_text=config.getoption('--time-input-text')
-    )
+def settings(request: FixtureRequest):
+    return Settings.from_config(request.config)
 
 
-def pytest_configure(config: Config, settings: Settings, mysql_client: MysqlClient):
-    if not hasattr(config, "slaveinput"):
+def wait_for_it(url, timeout=1, interval=3, retries=10):
+    for _ in range(retries):
+        try:
+            requests.get(url, timeout=timeout)
+            break
+        except requests.RequestException:
+            time.sleep(interval)
+
+
+def pytest_configure(config: Config):
+    normal_start = not config.getoption('--fixtures') and \
+                   not config.getoption('--collect-only')
+    if not hasattr(config, "workerinput") and normal_start:
         # executes on master
-        mysql_client.add_registered_user(username=settings.admin_username,
-                                         email=settings.admin_email,
-                                         password=settings.admin_password)
-
-        driver = webdriver.Remote(command_executor=f'http://{settings.selenoid_netloc}/wd/hub/',
+        print('pytest: pytest_configure enter')
+        settings = Settings.from_config(config)
+        wait_for_it(f'http://{settings.app_api_netloc}/healthcheck')
+        mysql_client = MysqlClient(settings)
+        mysql_client.clean()
+        mysql_client.add_registered_user(
+            username=settings.admin_username,
+            email=settings.admin_email,
+            password=settings.admin_password)
+        driver = webdriver.Remote(command_executor=settings.selenoid_url,
                                   options=ChromeOptions(),
                                   desired_capabilities={'acceptInsecureCerts': True})
         driver.maximize_window()
@@ -75,3 +80,6 @@ def pytest_configure(config: Config, settings: Settings, mysql_client: MysqlClie
         settings.admin_keys = ApiClient.Keys(session=main_page.session_cookie,
                                              agent=main_page.user_agent)
         driver.quit()
+        ApiClient.admin_keys = settings.admin_keys
+        ApiClient.netloc = settings.app_api_netloc
+        print('pytest: pytest_configure exit')

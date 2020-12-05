@@ -14,8 +14,7 @@ def api_client(settings: Settings):
 
     You can test API without authorization through web interface each time
     You should use it to test API as authorized user"""
-    return ApiClient(admin_keys=settings.admin_keys,
-                     netloc=settings.app_netloc)
+    return ApiClient(keys=settings.admin_keys)
 
 
 @pytest.fixture(scope='function')
@@ -27,6 +26,4 @@ def mock_client(settings: Settings):
 @pytest.fixture(scope='function')
 def mysql_client(settings: Settings):
     """Return `MySQLClient` object that can query to MySQL test server"""
-    return MysqlClient(db_name=settings.mysql_database, table_name=settings.mysql_table,
-                       user=settings.mysql_user, password=settings.mysql_password,
-                       host=settings.mysql_host, port=settings.mysql_port)
+    return MysqlClient(settings)

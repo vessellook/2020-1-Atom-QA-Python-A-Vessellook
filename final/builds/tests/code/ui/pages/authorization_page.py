@@ -18,7 +18,7 @@ class AuthorizationPage(BasePage):
 
     @allure.step("Go to authorization page")
     def make_request(self):
-        self.make_request_base(url=f'http://{self.settings.app_netloc}/login')
+        self.make_request_base(url=f'http://{self.settings.app_ui_netloc}/login')
 
     @allure.step("Auth with credentials ({username}, {password})")
     def authorize(self, username: str, password: str) -> 'main_page.MainPage':
@@ -28,8 +28,8 @@ class AuthorizationPage(BasePage):
             self.click(locators.SUBMIT_BUTTON)
             try:
                 self.wait(self.load_time).until(main_page.MainPage.is_opened)
-            except WebDriverException as e:
-                raise AuthorizationError(e.msg)
+            except WebDriverException as err:
+                raise AuthorizationError from err
         return main_page.MainPage(self.driver, self.settings)
 
     @allure.step("Go to registration page from authorization page")
