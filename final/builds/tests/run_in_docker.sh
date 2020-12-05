@@ -1,6 +1,9 @@
 #!/bin/bash
-pytest -l -s -vv -rA --clean-alluredir \
+pytest --showlocals \
+       --capture=no \
+       --verbosity=2 \
+       -rA \
+       --clean-alluredir \
        --alluredir=/alluredir \
-       -m mixed \
-       -n 3 \
+       --numprocesses=3 \
        --video-enable

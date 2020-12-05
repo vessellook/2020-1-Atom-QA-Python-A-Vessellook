@@ -1,0 +1,22 @@
+version: '2.1'
+
+networks:
+  net:
+    external: true
+    name: ${COMPOSE_NETWORK_NAME}
+
+services:
+  tests:
+    build: builds/tests
+    image: ${TESTS_IMAGE_NAME}
+    external_links:
+      - ${COMPOSE_PROJECT_NAME}_proxy_1:proxy
+      - ${COMPOSE_PROJECT_NAME}_selenoid_1:selenoid
+      - ${COMPOSE_PROJECT_NAME}_mock_1:mock
+      - ${COMPOSE_PROJECT_NAME}_mysql_1:mysql
+    volumes:
+      - ./mount/screenshots:/screenshots
+      - ./mount/allure-results:/alluredir
+      - ./mount/videos:/video
+    networks:
+      - net
