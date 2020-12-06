@@ -13,14 +13,13 @@ from utils import make
 
 
 class TestApi:
-    @allure.title('Check add_user API function')
     @pytest.mark.API
     @pytest.mark.parametrize(['username', 'email', 'password'], [
         ('toollongusername0123456789012345678901234567890123456789012345678901234567890', 'email@my.email', 'password'),
         ('ussrname', 'email@tolongemail0212345890123456789012345678901234567890123456789012345678123mail.ru', 'mypass'),
         ('u53rNaM3', 'Imail@III.ru', 'tolongpass314159265358979323846264338327950288419716939937510582097494459230781'),
-        ('u', 'em@email.org', 'mypassword'),
-        ('uuuuuuuu', 'e', 'pppppppppppp')
+        ('s', 'em@email.org', 'mypassword'),
+        ('s' * 8, 'm', 'p' * 12)
     ])
     def test_add_user_negative(self, username, email, password, mysql_client: MysqlClient,
                                api_client: ApiClient):
@@ -33,7 +32,6 @@ class TestApi:
 class TestScenarios:
     @allure.title("Scenario for single user")
     @pytest.mark.scenario
-    @pytest.mark.mixed
     def test_scenario_single_user(self, api_client: ApiClient, mysql_client: MysqlClient,
                                   authorization_page: AuthorizationPage):
         username, email, password = make.auth_data()
@@ -89,7 +87,6 @@ class TestScenarios:
 
     @allure.title("Second scenario for single user")
     @pytest.mark.scenario
-    @pytest.mark.mixed
     def test_scenario_single_user_2(self, api_client: ApiClient, mysql_client: MysqlClient,
                                     registration_page: RegistrationPage):
         username, email, password = make.auth_data()

@@ -87,8 +87,9 @@ class BasePage:
     def session_cookie(self) -> Optional[str]:
         try:
             return self.driver.get_cookie('session')['value']
-        except WebDriverException:
-            pass
+        except TypeError:
+            return None
+
 
     @property
     def user_agent(self):

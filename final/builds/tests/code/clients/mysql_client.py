@@ -17,7 +17,8 @@ class MysqlClient:
         """Default values will not be changed in this project"""
         self.engine = create_engine(
             f'mysql+pymysql://{settings.mysql_user}:{settings.mysql_password}'
-            f'@{settings.mysql_host}:{settings.mysql_port}/{settings.mysql_database}')
+            f'@{settings.mysql_host}:{settings.mysql_port}/{settings.mysql_database}',
+            pool_recycle=3600, pool_pre_ping=True)
         self.create_session = sessionmaker(bind=self.engine)
 
     def get_record(self, username: str) -> Optional[Record]:

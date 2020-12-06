@@ -22,10 +22,6 @@ main() {
   #    --video-enable
 }
 
-if ! test -z $1; then
-  cd $1
-fi
-
 if [[ -f .env ]]; then
   source .env
 else

@@ -4,9 +4,11 @@ import pytest
 import requests
 # This function works as operator assert but not stop execution
 import pytest_check as check
+from selenium.common.exceptions import WebDriverException
 
 from clients.api_client import ApiClient
-from utils import status_codes
+from ui.pages.authorization_page import AuthorizationPage, AuthorizationError
+from utils import status_codes, make
 
 
 def test_status(api_client: ApiClient):
@@ -20,35 +22,96 @@ class TestAdd:
     """Tests for add_user API function"""
 
     @pytest.mark.API
-    @pytest.mark.parametrize(['username', 'email', 'password', 'code'], [
+    @pytest.mark.smoke
+    @pytest.mark.parametrize(['username', 'email', 'password'], [
         pytest.param("uZ5iwv9mHRau2XwUyq", "O0pUmj65FwBK5@BEX4B0Ic304jp.Jn_X",
-                     "_nPnV9OXAUv4BRd8u4x", 201,
+                     "_nPnV9OXAUv4BRd8u4x",
                      id="status code 210 instead of 201 [1]"),
-        pytest.param("lgsI2JTTROPy", "ufA0AAb93mU@GgKg5eAlDqAF7y.jVdX", "c1oGe2lpHykxh", 201,
+        pytest.param("lgsI2JTTROPy", "ufA0AAb93mU@GgKg5eAlDqAF7y.jVdX", "c1oGe2lpHykxh",
                      id="status code 210 instead of 201 [2]"),
-        pytest.param("SxXkQphZlyU", "Nt_2EANGatP@corp.mail.ru", "k7p4abS9pz8", 201,
+        pytest.param("SxXkQphZlyU", "Nt_2EANGatP@corp.mail.ru", "k7p4abS9pz8",
                      id="status code 210 instead of 201 [3]"),
-        pytest.param("gqXyqCeSI0w1", "UPFHrwnm0zW@xvA42DyVVy1C.e7I", "", 400, id="empty password"),
-        pytest.param("yzBG6H3WRK", "", "TOVZLrBqyRptj", 400, id="empty email"),
-        pytest.param("", "xUGaUS3O7CmHN8@XfKKNxIWC4Fd5nwW0LJB.L9c", "g6PPzw2xHlXegUuBx_", 400,
-                     id="empty username"),
-        pytest.param("yqhhhkehDedxjl9ZQxEi", "SY59UhV1WLoPhZ_Vum0P@", "j8VUpXNfyRcbe", 400,
-                     id="email without domain"),
-        pytest.param("Ye4vpas2Y6a", "@hzJXSrXs5xtItIe.fhY", "JAY853ARpOLTkx", 400,
-                     id="email without login"),
-        pytest.param("8n62dfjLa69XPR2jH", "9tljbbnWGrOLr7.ru", "le0jpElLZ_", 400,
-                     id="email without login@"),
-        pytest.param("Ra1FY27beHOW9Ygbbys", "bpnjHs9xoyV@.ru", "RENDh9m1Hu65A", 400,
-                     id="email with invalid domain"),
-        pytest.param("JfBwfuSmYcloJ3", "sAzYuPLOv1QUz9PBe@mail.", "O42CXEz7oCq", 400,
-                     id="invalid email domain"),
-        pytest.param("8ox9fBbedjaWFQUS8sP", "oAvzOXnZJkQ82", "bA0PyaohHlhW9LS", 400,
-                     id="invalid email")])
-    def test_valid_json(self, username, email, password, code,
-                        api_client: ApiClient):
-        """Passes different auth_data (valid or invalid) to app with valid json"""
+    ])
+    def test_valid_credentials(self, username, email, password,
+                               api_client: ApiClient):
+        """Test add_user API function with valid credentials"""
         response = api_client.add_user(username=username, email=email, password=password)
-        assert response.status_code == code
+        assert response.status_code == 201
+
+    @pytest.mark.API
+    @pytest.mark.smoke
+    @pytest.mark.parametrize(['username', 'email', 'password'], [
+        pytest.param('uservalid1', 'emailvalid1@email.valid', '', marks=pytest.mark.smoke,
+                     id="empty password"),
+        pytest.param("uservalid2", '', 'validpassword', marks=pytest.mark.smoke,
+                     id="empty email"),
+        pytest.param("", "emailvalid3@email.valid", 'validpassword', marks=pytest.mark.smoke,
+                     id="empty username"),
+        pytest.param('uservalid4', 'emailinvalid@', 'validpassword',
+                     id="email without domain"),
+        pytest.param('uservalid5', "@invalid.email", 'validpassword',
+                     id="email without login"),
+        pytest.param("uservalid6", 'invalid.email', 'validpassword',
+                     id="email without login@"),
+        pytest.param("uservalid7", "emailinvalid7@.ru", 'validpassword',
+                     id="email with invalid domain"),
+        pytest.param("uservalid8", "emailinvalid8@mail.", "validpassord",
+                     id="invalid email domain"),
+        pytest.param("uservalid9", "emailinvalid9", "validpassword", id="invalid email (1)"),
+        pytest.param("uservalid10", "emailinvalid", "validpassword", id="invalid email (2)"),
+        pytest.param("uservalid11", "emailinvalid11@email.74", "validpassword", id="numeric email"),
+    ])
+    def test_invalid_credentials(self, username, email, password, api_client: ApiClient):
+        """Test add_user API function with invalid credentials"""
+        response = api_client.add_user(username=username, email=email, password=password)
+        assert response.status_code == 400
+
+    @pytest.mark.API
+    @pytest.mark.parametrize(['username', 'email', 'password'], [
+        pytest.param('n', 'some@any.email', 'somepassword', id='short but not empty username'),
+        pytest.param('n' * 5, 'mem@any.email', 'somepassword', id="5 letters' username"),
+        pytest.param('n' * 6, 'eme@any.email', 'somepassword', id="6 letters' username"),
+        pytest.param('n' * 16, 'em@any.email', 'somepassword', id="16 letters' username"),
+        pytest.param('n' * 17, 'emo@any.email', 'somepassword', id="17 letters' username"),
+        pytest.param('n' * 100, 'long@any.email', 'somepassword', id="long' username"),
+        pytest.param('nameofuser', 'f', 'somepassword', id='short but not empty invalid email'),
+        pytest.param('usernnname', 'd@b.c', 'somepassword', id='short but not empty valid email'),
+        pytest.param('n' * 10, ('long' * 100 + '@any.email')[-64:], 'somepassword',
+                     id="64 letters' email"),
+        pytest.param('n' * 11, ('long' * 100 + '@any.email')[-65:], 'somepassword',
+                     id="65 letters' email"),
+        pytest.param('n' * 12, 'long' * 100 + '@any.email', 'somepassword', id="long email"),
+        pytest.param('n' * 9, 'longlo@any.email3', 's' * 10, id="email with digit at the end"),
+        pytest.param('u' * 15, 'short@any.email', 's', id='short but not empty password'),
+        pytest.param('n' * 13, 'longer@any.email', 's' * 255, id="255 letters' password"),
+        pytest.param('n' * 14, 'longlong@any.email', 's' * 256, id="256 letters' password"),
+        pytest.param('n' * 8, 'longest@any.email', 's' * 1000, id="long password"),
+        pytest.param('n' * 8 + '_', 'under@any.email', 's' * 9, id="underscore"),
+        pytest.param('n' * 8 + '-', 'hyphen@any.email', 's' * 9, id="hyphen"),
+    ])
+    def test_integrity(self, username, email, password, authorization_page: AuthorizationPage,
+                       api_client: ApiClient):
+        """Test integrity of add_user API function and authorization
+
+        Test checks this logic: If someone succeed to add user,
+        that user must be able to pass authorization with the same credentials
+        Othervise, user must not be able to pass authorization with these credentials
+        """
+        response = api_client.add_user(username=username, email=email, password=password)
+        if response.status_code >= 400:
+            with allure.step("'add_user' not succeed. Check that authorization will not succeed"):
+                with pytest.raises(AuthorizationError):
+                    authorization_page.authorize(username=username, password=password)
+        else:
+            with allure.step("'add_user' succeed. Check that authorization will succeed"):
+                try:
+                    authorization_page.authorize(username=username, password=password)
+                except AuthorizationError as err:
+                    allure.attach.file(
+                        authorization_page.make_screenshot('not_succeed_authorization'),
+                        attachment_type=allure.attachment_type.PNG,
+                        name='not_succeed_authorization.png')
+                    raise AssertionError from err  # to mark test as failed, not broken
 
     @pytest.mark.API
     @pytest.mark.parametrize(['json', 'code'], [
@@ -75,6 +138,17 @@ class TestAdd:
                                      json=json)
             assert response.status_code == code
 
+    @pytest.mark.API
+    def test_authorize_after_add(self, authorization_page: AuthorizationPage,
+                                 api_client: ApiClient):
+        username, email, password = make.auth_data()
+        response = api_client.add_user(username=username, email=email, password=password)
+        assert response.status_code in range(200, 400)
+        try:
+            authorization_page.authorize(username=username, password=password)
+        except WebDriverException as err:
+            raise AssertionError from err
+
 
 class TestDel:
     """Tests for del_user API function"""
@@ -95,7 +169,7 @@ class TestDel:
         If app accept to add user it tries to delete this user"""
         response = api_client.add_user(username=username, email=email, password=password)
         if response.status_code not in range(200, 300):
-            pytest.skip('there were error with add_user function')
+            pytest.skip('there was error with add_user function')
         with allure.step('Del user'):
             response2 = api_client.del_user(username)
             assert response2.status_code == status_codes.DELETED
@@ -123,7 +197,7 @@ class TestBlock:
         If app accept to add user it tries to delete this user"""
         response = api_client.add_user(username=username, email=email, password=password)
         if response.status_code not in range(200, 300):
-            pytest.skip('there were error with add_user function')
+            pytest.skip('there was error with add_user function')
         with allure.step('Block user'):
             response2 = api_client.block_user(username)
             assert response2.status_code == status_codes.OK
@@ -151,7 +225,7 @@ class TestAccept:
         If app accept to add user it tries to delete this user"""
         response = api_client.add_user(username=username, email=email, password=password)
         if response.status_code not in range(200, 300):
-            pytest.skip('there were error with add_user function')
+            pytest.skip('there was error with add_user function')
         with allure.step('Accept user again'):
             response2 = api_client.accept_user(username)
             assert response2.status_code == status_codes.NOT_CHANGED
@@ -162,56 +236,3 @@ class TestAccept:
         with allure.step('Accept user again'):
             response5 = api_client.accept_user(username)
             assert response5.status_code == status_codes.NOT_CHANGED
-
-
-@pytest.mark.scenario
-@pytest.mark.API
-def test_scenario(api_client: ApiClient):
-    """Test with several requests"""
-
-    username = 'my-username'
-    email = 'my-email@gmail.com'
-    password = 'I love eating pizza'
-
-    with allure.step(f"Del user {username} who doesn't exist"):
-        response = api_client.del_user(username)
-        assert response.status_code == status_codes.NOT_EXIST
-    with allure.step(f"Block user {username} who doesn't exist"):
-        response = api_client.block_user(username)
-        assert response.status_code == status_codes.NOT_EXIST
-    with allure.step(f"Accept user {username} who doesn't exist"):
-        response = api_client.accept_user(username)
-        assert response.status_code == status_codes.NOT_EXIST
-    with allure.step(f'Add user with credentials ({username}, {email}, {password})'):
-        response = api_client.add_user(username=username, email=email, password=password)
-        assert response.status_code == status_codes.CREATED
-    with allure.step(f"Accept user {username}"):
-        response = api_client.accept_user(username)
-        assert response.status_code == status_codes.NOT_CHANGED
-    with allure.step(f"Block user {username}"):
-        response = api_client.block_user(username)
-        assert response.status_code == status_codes.OK
-    with allure.step(f"Block user {username} again"):
-        response = api_client.block_user(username)
-        assert response.status_code == status_codes.NOT_CHANGED
-    with allure.step(f"Accept user {username}"):
-        response = api_client.accept_user(username)
-        assert response.status_code == status_codes.OK
-    with allure.step(f"Accept user {username}"):
-        response = api_client.accept_user(username)
-        assert response.status_code == status_codes.NOT_CHANGED
-    with allure.step(f"Del user {username}"):
-        response = api_client.del_user(username)
-        assert response.status_code == status_codes.DELETED
-    with allure.step(f'Add user with credentials ({username}, {email}, {password})'):
-        response = api_client.add_user(username=username, email=email, password=password)
-        assert response.status_code == status_codes.CREATED
-    with allure.step(f'Try to add user with credentials ({username}, {email}, {password})'):
-        response = api_client.add_user(username=username, email=email, password=password)
-        assert response.status_code == status_codes.NOT_CHANGED
-    with allure.step(f'Try to add user with credentials ({username}, {email}, {password})'):
-        response = api_client.add_user(username=username, email='a' + email, password=password)
-        assert response.status_code == status_codes.NOT_CHANGED
-    with allure.step(f'Try to add user with credentials ({username}, {email}, {password})'):
-        response = api_client.add_user(username='a' + username, email=email, password=password)
-        assert response.status_code == status_codes.NOT_CHANGED

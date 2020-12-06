@@ -3,7 +3,7 @@ from typing import Optional
 
 from _pytest.config import Config
 
-from clients.api_client import ApiClient
+from clients.api_client import Keys
 
 TABLENAME = 'test_users'
 
@@ -27,10 +27,10 @@ class Settings:
     video_enable: bool
     time_load_page: str
     time_input_text: str
-    admin_keys: Optional[ApiClient.Keys] = None
 
     @staticmethod
     def from_config(config: Config):
+        print('[LOOK_T_ME] CONFIG IN SETTINGS', dir(config))
         return Settings(
             selenoid_url=f'http://{config.getoption("--selenoid-netloc")}/wd/hub',
             admin_username=config.getoption('--admin-username'),
@@ -48,5 +48,5 @@ class Settings:
             video_dir=config.getoption('--video-dir'),
             video_enable=config.getoption('--video-enable'),
             time_load_page=config.getoption('--time-load-page'),
-            time_input_text=config.getoption('--time-input-text')
+            time_input_text=config.getoption('--time-input-text'),
         )

@@ -35,7 +35,7 @@ def driver(request: FixtureRequest, settings: Settings):
             name = f'{time.time()}_{random.random()}.mp4'
             capabilities['videoName'] = name
             enable_video(request, settings, name)
-    driver = webdriver.Remote(command_executor=f'http://{settings.selenoid_netloc}/wd/hub',
+    driver = webdriver.Remote(command_executor=settings.selenoid_url,
                               options=ChromeOptions(),
                               desired_capabilities=capabilities)
     driver.maximize_window()
@@ -44,14 +44,14 @@ def driver(request: FixtureRequest, settings: Settings):
 
 
 @pytest.fixture(scope='function')
-def registration_page(driver):
-    page = RegistrationPage(driver)
+def registration_page(driver, settings):
+    page = RegistrationPage(driver,settings)
     page.make_request()
     return page
 
 
 @pytest.fixture(scope='function')
-def authorization_page(driver):
-    page = AuthorizationPage(driver)
+def authorization_page(driver, settings):
+    page = AuthorizationPage(driver, settings)
     page.make_request()
     return page
