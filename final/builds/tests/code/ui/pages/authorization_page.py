@@ -29,7 +29,7 @@ class AuthorizationPage(BasePage):
             try:
                 self.wait(self.load_time).until(main_page.MainPage.is_opened)
             except WebDriverException as err:
-                raise AuthorizationError from err
+                raise AuthorizationError('Authorization failed') from err
         return main_page.MainPage(self.driver, self.settings)
 
     @allure.step("Go to registration page from authorization page")

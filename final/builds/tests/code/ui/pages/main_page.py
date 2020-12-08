@@ -39,6 +39,10 @@ class MainPage(BasePage):
     def check_url(self, msg: str = ''):
         assert 'welcome' in urlparse(self.driver.current_url).path, msg
 
+    def check_url_negative(self, msg: str = ''):
+        assert 'welcome' not in urlparse(self.driver.current_url).path, msg
+
+
     @staticmethod
     def is_opened(driver):
         return 'welcome' in urlparse(driver.current_url).path

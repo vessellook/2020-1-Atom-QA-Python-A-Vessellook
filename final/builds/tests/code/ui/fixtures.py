@@ -14,7 +14,7 @@ from ui.pages.authorization_page import AuthorizationPage
 
 def enable_video(request: FixtureRequest, settings: Settings, name):
     def save():
-        for i in range(60):
+        for _ in range(60):
             try:
                 open(f'{settings.video_dir}/{name}', 'rb')  # noqa
                 break
@@ -45,7 +45,7 @@ def driver(request: FixtureRequest, settings: Settings):
 
 @pytest.fixture(scope='function')
 def registration_page(driver, settings):
-    page = RegistrationPage(driver,settings)
+    page = RegistrationPage(driver, settings)
     page.make_request()
     return page
 

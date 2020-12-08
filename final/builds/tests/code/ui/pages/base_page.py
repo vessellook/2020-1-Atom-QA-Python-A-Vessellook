@@ -2,7 +2,7 @@ import time
 from typing import Optional
 
 import allure
-from selenium.common.exceptions import StaleElementReferenceException, TimeoutException, WebDriverException
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
@@ -43,6 +43,7 @@ class BasePage:
         return self.wait(timeout=timeout if timeout is not None else 20).until(
             conditions.presence_of_element_located(locator))
 
+    @allure.step('Refresh page')
     def refresh(self):
         html = self.driver.find_element_by_tag_name('html')
         self.driver.refresh()
@@ -89,7 +90,6 @@ class BasePage:
             return self.driver.get_cookie('session')['value']
         except TypeError:
             return None
-
 
     @property
     def user_agent(self):

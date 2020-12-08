@@ -1,4 +1,5 @@
 """Tests for WEB interface of myapp"""
+import time
 
 import allure
 import pytest
@@ -31,7 +32,13 @@ class TestRegistrationPage:
     ])
     def test_valid_credentials(self, username, email, password,
                                registration_page: RegistrationPage):
-        """Test registration with valid credentials"""
+        """Test registration with valid credentials
+
+        Steps:
+            - Open registration page and try to pass registration
+        Expected results:
+            Current page url path contains 'welcome', so the current page is main
+        """
         try:
             main_page = registration_page.pass_registration(username=username, email=email,
                                                             password=password)
@@ -71,7 +78,13 @@ class TestRegistrationPage:
                      id="confirm_password field and password are different")])
     def test_invalid_credentials(self, username, email, password, confirm_password,
                                  registration_page: RegistrationPage):
-        """Test registration with invalid credentials"""
+        """Test registration with invalid credentials
+
+        Steps:
+            - Open registration page and try to pass registration
+        Expected results:
+            Current page url path doesn't contain 'welcome', so the current page is main
+        """
         with pytest.raises(RegistrationError):
             registration_page.pass_registration(username=username, email=email,
                                                 password=password,
@@ -101,13 +114,7 @@ class TestRegistrationPage:
         pytest.param('u' * 8 + '-', 'hyphen@some.email', 's' * 9, id="hyphen"),
     ])
     def test_integrity(self, username, email, password, registration_page: RegistrationPage):
-        """Test integrity of registration and authorization
-
-        Check this logic: If users succeed to pass registration,
-        they must be able to pass authorization with the same credentials
-        Othervise, users must not be able to pass authorization with these
-        credentials
-        """
+        """Test integrity of registration and authorization"""
         try:
             main_page = registration_page.pass_registration(username=username, email=email,
                                                             password=password)
@@ -135,6 +142,7 @@ class TestAuthorizationPage:
     """Tests for authorization page"""
 
     @pytest.mark.UI
+    @pytest.mark.enable_video
     @pytest.mark.parametrize(['username', 'email', 'password'], [
         pytest.param('wk33NtzvQHW3kHMs', 'U3Aje@Kr0poHTbe.0rFu', 'XkJWFH98GhJgvNdg')
     ])
@@ -190,17 +198,27 @@ class TestMainPage:
     def test_citations(self, main_page: MainPage):
         """Test that citations in the footer are correct"""
         for _ in range(25):
-            check.is_in(main_page.wisdom_citation, wisdom_citations)
+            citation = main_page.wisdom_citation
+            with check.check, allure.step(f"Check '{citation}'"):
+                assert main_page.wisdom_citation in wisdom_citations
             main_page.refresh()
 
     @pytest.mark.UI
+    @pytest.mark.enable_video
     @pytest.mark.parametrize('vk_id', ['0', '<script>alert(1);</script>', 'some-vk-id'])
     def test_vk_id(self, vk_id, main_page: MainPage, mock_client: MockClient):
-        """Test vk_id display correctly if it has correct value"""
+        """Test that vk_id is displayed correctly if it has correct string value"""
         username = main_page.username
         mock_client.set_vk_id(username, vk_id)
+        time.sleep(2)
         main_page.refresh()
-        try:
-            check.equal(main_page.vk_id, vk_id)
-        except WebDriverException as err:
-            raise AssertionError('vk_id element not found') from err
+        with allure.step('search for vk_id'):
+            try:
+                real_vk_id = main_page.vk_id
+            except WebDriverException as err:
+                allure.attach.file(main_page.make_screenshot('vk_id'),
+                                   attachment_type=allure.attachment_type.PNG,
+                                   name='vk_id--not--found.png')
+                raise AssertionError('vk_id element not found') from err
+        with allure.step('Compare expected and real vk_id'):
+            check.equal(real_vk_id, vk_id)

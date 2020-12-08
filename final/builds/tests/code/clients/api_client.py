@@ -25,7 +25,7 @@ class ApiClient:
         self.cookies = {'session': keys.session}
         self.headers = {'User-Agent': keys.agent}
 
-    @allure.step('Call add_user API function of myapp')
+    @allure.step('Call add_user API function')
     def add_user(self, username: str, email: str, password: str) -> requests.Response:
         """Call add_user API function"""
         return requests.post(f'http://{ApiClient.netloc}/api/add_user',
@@ -37,7 +37,7 @@ class ApiClient:
                                  "email": email},
                              timeout=self._timeout)
 
-    @allure.step('Call del_user API function of myapp')
+    @allure.step('Call del_user API function')
     def del_user(self, username: str) -> requests.Response:
         """Call del_user API function"""
         return requests.get(f'http://{ApiClient.netloc}/api/del_user/{username}',
@@ -45,7 +45,7 @@ class ApiClient:
                             headers=self.headers,
                             timeout=self._timeout)
 
-    @allure.step('Call block_user API function of myapp')
+    @allure.step('Call block_user API function')
     def block_user(self, username: str) -> requests.Response:
         """Call block_user API function"""
         return requests.get(f'http://{ApiClient.netloc}/api/block_user/{username}',
@@ -53,7 +53,7 @@ class ApiClient:
                             headers=self.headers,
                             timeout=self._timeout)
 
-    @allure.step('Call accept_user API function of myapp')
+    @allure.step('Call accept_user API function')
     def accept_user(self, username: str) -> requests.Response:
         """Call accept_user API function"""
         return requests.get(f'http://{ApiClient.netloc}/api/accept_user/{username}',
@@ -61,7 +61,7 @@ class ApiClient:
                             headers=self.headers,
                             timeout=self._timeout)
 
-    @allure.step('Call status API function of myapp')
+    @allure.step('Call status API function')
     def get_status(self) -> requests.Response:
         """Call status API function"""
         return requests.get(f'http://{ApiClient.netloc}/status',

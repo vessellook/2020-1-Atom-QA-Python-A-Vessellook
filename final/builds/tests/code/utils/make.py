@@ -13,9 +13,10 @@ def integer():
 
 
 def email(login: str = None, domain: str = None):
-    login = login if login is not None else string(max_len=7)
-    domain = domain if domain is not None else f'{string(max_len=7)}' \
-                                               f'.{string(min_len=1, max_len=4)}{random.choice(ascii_letters)}'
+    if login is None:
+        login = string(max_len=7)
+    if domain is None:
+        domain = f'{string(max_len=7)}.{string(min_len=1, max_len=4)}{random.choice(ascii_letters)}'
     return f'{login}@{domain}'
 
 
@@ -23,8 +24,10 @@ _email = email
 
 
 def auth_data(username: str = None, email: str = None, password: str = None):  # noqa: disable=W0621
-    username = username if username is not None else string()
-    email = email if email is not None else _email()  # noqa: disable=W0621
-    password = password if password is not None else string()
-    print('auth_data:', username, email, password)
+    if username is None:
+        username = string()
+    if email is None:
+        email = _email()  # noqa: disable=W0621
+    if password is None:
+        password = string()
     return username, email, password

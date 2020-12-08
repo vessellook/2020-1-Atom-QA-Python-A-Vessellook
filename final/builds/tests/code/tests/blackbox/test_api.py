@@ -9,9 +9,20 @@ from selenium.common.exceptions import WebDriverException
 from clients.api_client import ApiClient
 from ui.pages.authorization_page import AuthorizationPage, AuthorizationError
 from utils import status_codes, make
+from utils.common import attach_http
 
 
 def test_status(api_client: ApiClient):
+    """Test that get_status API function works well
+
+    Steps:
+        - Make request to application with path '/status'
+
+    Expected results:
+        Response status code is 200
+        Response header 'Content-Type' has value 'application/json'
+        Response body is valid JSON that has field 'status' wit value 'ok'
+    """
     response = api_client.get_status()
     check.equal(response.status_code, status_codes.OK)
     check.equal(response.headers['Content-Type'], 'application/json')
@@ -34,7 +45,14 @@ class TestAdd:
     ])
     def test_valid_credentials(self, username, email, password,
                                api_client: ApiClient):
-        """Test add_user API function with valid credentials"""
+        """Test add_user API function with valid credentials
+
+        Steps:
+            - Make request to application with path /api/add_user. JSON in valid format like
+            {"username": "someusername", "email": "some@email.ru", "password": "somepassword"}
+        Expected results:
+            Response status code is 201
+        """
         response = api_client.add_user(username=username, email=email, password=password)
         assert response.status_code == 201
 
@@ -62,7 +80,14 @@ class TestAdd:
         pytest.param("uservalid11", "emailinvalid11@email.74", "validpassword", id="numeric email"),
     ])
     def test_invalid_credentials(self, username, email, password, api_client: ApiClient):
-        """Test add_user API function with invalid credentials"""
+        """Test add_user API function with invalid credentials
+
+        Steps:
+            - Make request to application with path /api/add_user. JSON in valid format like
+            {"username": "someusername", "email": "some@email.ru", "password": "somepassword"}
+        Expected results:
+            Response status code is 400
+        """
         response = api_client.add_user(username=username, email=email, password=password)
         assert response.status_code == 400
 
@@ -93,9 +118,15 @@ class TestAdd:
                        api_client: ApiClient):
         """Test integrity of add_user API function and authorization
 
-        Test checks this logic: If someone succeed to add user,
-        that user must be able to pass authorization with the same credentials
-        Othervise, user must not be able to pass authorization with these credentials
+        Steps:
+            - Make request to application with path /api/add_user and JSON in valid format like
+            {"username": "someusername", "email": "some@email.ru", "password": "somepassword"}
+            - Try to authorize to the site with the same credentials
+
+        Expected results:
+            If request to /api/add_user has status code 400 or more,
+            user mustn't be able to authorize to the site with these credentials
+            In other cases user must be able to authorize to the site with these credentials
         """
         response = api_client.add_user(username=username, email=email, password=password)
         if response.status_code >= 400:
@@ -114,40 +145,83 @@ class TestAdd:
                     raise AssertionError from err  # to mark test as failed, not broken
 
     @pytest.mark.API
-    @pytest.mark.parametrize(['json', 'code'], [
-        ({}, 400), ({'username': 'JmJ46wL1CgObdlYZfY'}, 400),
-        ({'email': 'CcO2hP0pccOTDGyBOi@O56LMJgwOyrtO.wzGz'}, 400),
-        ({'password': 'SlyVs9BNtXVcd3NyC'}, 400),
-        ({'username': 'B2kthWKJSZa2m',
-          'email': 'R8VfWkQncDCg4CzTElp3@sSZcFnRcm7uyoiwcE3z.ltFu9'}, 400),
-        ({'username': 'AKsgVG9GXPcvxPQOzkDH', 'password': 'iFoe4A65FZ1'}, 400),
-        ({'email': 'nHsv74vKecBib0Zfz@7GLvNEU4xAQ.dPNsf',
-          'password': 'vUCyRJ6W70Q9EoADN_'}, 400),
-        pytest.param({'username': -5, 'password': False, 'email': []}, 400,
+    @pytest.mark.parametrize('json', [
+        {},
+        [],
+        {'username': 'JmJ46wL1CgObdlYZfY'},
+        {'email': 'CcO2hP0pccOTDGyBOi@O56LMJgwOyrtO.wzGz'},
+        {'password': 'SlyVs9BNtXVcd3NyC'},
+        {'username': 'B2kthWKJSZa2m',
+         'email': 'R8VfWkQncDCg4CzTElp3@sSZcFnRcm7uyoiwcE3z.ltFu9'},
+        {'username': 'AKsgVG9GXPcvxPQOzkDH', 'password': 'iFoe4A65FZ1'},
+        {'email': 'nHsv74vKecBib0Zfz@7GLvNEU4xAQ.dPNsf',
+         'password': 'vUCyRJ6W70Q9EoADN_'},
+        pytest.param({'username': -5, 'password': False, 'email': []},
                      id='210 status code instead of 400'),
-        ([], 400),
-        (['not', 'empty', 'list'], 400),
-        ('just string', 400)
-    ])
-    def test_invalid_json(self, json, code, api_client: ApiClient):
-        """Passes different invalid messages in json"""
+        ['not', 'empty', 'list'],
+        {'not': 'empty', 'dictionary': True},
+        'just string'])
+    def test_invalid_json(self, json, api_client: ApiClient):
+        """Test status codes for requests with different invalid JSON
+
+        Steps:
+            - Make request to application with path /api/add_user and JSON in invalid formats
+
+        Expected results:
+            Response status code is 400
+        """
         with allure.step('Send invalid json to add user'):
             response = requests.post(f'http://{api_client.netloc}/api/add_user',
                                      cookies=api_client.cookies,
                                      headers=api_client.headers,
                                      json=json)
-            assert response.status_code == code
+            attach_http(response)
+            assert response.status_code == 400
 
     @pytest.mark.API
+    @pytest.mark.smoke
     def test_authorize_after_add(self, authorization_page: AuthorizationPage,
                                  api_client: ApiClient):
+        """Test that user, created by API, can authorize properly
+
+        Steps:
+            - Make request to application with path /api/add_user and JSON in valid format
+            - Try to authorize with the same credentials
+
+        Expected results:
+            Response status code is 200 for API request
+            User succeed to authorize
+        """
         username, email, password = make.auth_data()
         response = api_client.add_user(username=username, email=email, password=password)
-        assert response.status_code in range(200, 400)
+        assert response.status_code in range(200, 300)
         try:
             authorization_page.authorize(username=username, password=password)
         except WebDriverException as err:
             raise AssertionError from err
+
+    @pytest.mark.API
+    def test_add_two_users_with_same_email(self, api_client: ApiClient):
+        """Test that it is impossible to create two users with same email
+
+        Steps:
+            - Make request to application with path /api/add_user and JSON in valid format
+            - Make another request to application with path /api/add_user
+              but different username and password
+        Expected results:
+            Status code for the first request is in 200-300 range
+            Status code for the first request is in 400-500 range
+        """
+        username, email, password = make.auth_data()
+        username2, _, password2 = make.auth_data(email=email)
+        with allure.step('Add the first user and check status code is in range 200 to 300'):
+            response = api_client.add_user(username=username, email=email, password=password)
+            attach_http(response, '1')
+            assert response.status_code in range(200, 300)
+        with allure.step('Add the second user and check status code is in range 400 to 500'):
+            response2 = api_client.add_user(username=username2, email=email, password=password2)
+            attach_http(response2, '2')
+            assert response2.status_code in range(400, 500)
 
 
 class TestDel:
@@ -163,18 +237,30 @@ class TestDel:
                      id="sql injection in password"),
     ])
     def test_added_users(self, username, email, password, api_client: ApiClient):
-        """Add and delete users
+        """Test that users deleted
 
-        Passes different auth_data (valid or invalid) to app with valid json.
-        If app accept to add user it tries to delete this user"""
+
+        Steps:
+            - Make request to application with path /api/add_user and JSON in valid format
+            - Make request to application with path /api/del_user/<username>
+            - Make request to application with path /api/del_user/<username> again
+
+        Expected results:
+            Status code for the first request is in 200-300 range
+            Status code for the second request is 204
+            Status code for the third request is 404
+        """
         response = api_client.add_user(username=username, email=email, password=password)
+        attach_http(response, '1')
         if response.status_code not in range(200, 300):
-            pytest.skip('there was error with add_user function')
+            raise Exception('there was error with add_user function')
         with allure.step('Del user'):
             response2 = api_client.del_user(username)
+            attach_http(response2, '2')
             assert response2.status_code == status_codes.DELETED
         with allure.step('Del user again'):
             response3 = api_client.del_user(username)
+            attach_http(response3, '3')
             assert response3.status_code == status_codes.NOT_EXIST
 
 
@@ -191,18 +277,29 @@ class TestBlock:
                      id="sql injection in password"),
     ])
     def test_added_users(self, username, email, password, api_client: ApiClient):
-        """Add and delete users
+        """Tests that users blocked
 
-        Passes different auth_data (valid or invalid) to app with valid json.
-        If app accept to add user it tries to delete this user"""
+        Steps:
+            - Make request to application with path /api/add_user and JSON in valid format
+            - Make request to application with path /api/block_user/<username>
+            - Make request to application with path /api/block_user/<username> again
+
+        Expected results:
+            Status code for the first request is in 200-300 range
+            Status code for the second request is 200
+            Status code for the third request is 304
+        """
         response = api_client.add_user(username=username, email=email, password=password)
+        attach_http(response, '1')
         if response.status_code not in range(200, 300):
-            pytest.skip('there was error with add_user function')
+            raise Exception('there was error with add_user function')
         with allure.step('Block user'):
             response2 = api_client.block_user(username)
+            attach_http(response2, '2')
             assert response2.status_code == status_codes.OK
         with allure.step('Block user again'):
             response3 = api_client.block_user(username)
+            attach_http(response3, '3')
             assert response3.status_code == status_codes.NOT_CHANGED
 
 
@@ -219,20 +316,36 @@ class TestAccept:
                      id="sql injection in password")
     ])
     def test_added_users(self, username, email, password, api_client: ApiClient):
-        """Add and delete users
+        """Tests accept_user API function for users
 
-        Passes different auth_data (valid or invalid) to app with valid json.
-        If app accept to add user it tries to delete this user"""
+        Steps:
+            - Make request to application with path /api/add_user and JSON in valid format
+            - Make request to application with path /api/accept_user/<username>
+            - Make request to application with path /api/block_user/<username>
+            - Make request to application with path /api/accept_user/<username>
+            - Make request to application with path /api/accept_user/<username>
+
+        Expected results:
+            Status code for the first request is in 200-300 range
+            Status code for the second request is 304
+            Status code for the fourth request is 200
+            Status code for the fifth request is 304
+        """
         response = api_client.add_user(username=username, email=email, password=password)
+        attach_http(response, '1')
         if response.status_code not in range(200, 300):
-            pytest.skip('there was error with add_user function')
-        with allure.step('Accept user again'):
+            raise Exception('there was error with add_user function')
+        with allure.step("Accept user that wasn't blocked"):
             response2 = api_client.accept_user(username)
+            attach_http(response2, '2')
             assert response2.status_code == status_codes.NOT_CHANGED
         with allure.step('Block user and accept him'):
             response3 = api_client.block_user(username)
+            attach_http(response3, '3')
             response4 = api_client.accept_user(username)
+            attach_http(response4, '4')
             assert response4.status_code == status_codes.OK
         with allure.step('Accept user again'):
             response5 = api_client.accept_user(username)
+            attach_http(response5, '5')
             assert response5.status_code == status_codes.NOT_CHANGED

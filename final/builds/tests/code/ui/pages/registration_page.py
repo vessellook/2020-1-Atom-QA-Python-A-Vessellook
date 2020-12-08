@@ -43,7 +43,7 @@ class RegistrationPage(BasePage):
                     self.make_screenshot(f'pass_registration-username={username}-except.png'),
                     name='in except block',
                     attachment_type=allure.attachment_type.PNG)
-                raise RegistrationError from err
+                raise RegistrationError('Registration failed') from err
         return main_page.MainPage(self.driver, self.settings)
 
     @allure.step("Go to authorization page from registration page")

@@ -10,7 +10,6 @@ from clients.mock_client import MockClient
 from clients.mysql_client import MysqlClient
 from settings import Settings
 
-# https://pypi.org/project/pytest-xdist/
 from ui.pages.authorization_page import AuthorizationPage
 
 
@@ -30,11 +29,12 @@ def _admin_keys(settings: Settings):
     main_page = authorization_page.authorize(username=settings.admin_username,
                                              password=settings.admin_password)
     keys = Keys(session=main_page.session_cookie,
-                          agent=main_page.user_agent)
+                agent=main_page.user_agent)
     driver.quit()
     return keys
 
 
+# copied from https://pypi.org/project/pytest-xdist/
 @pytest.fixture(scope='session')
 def admin_keys(tmp_path_factory, settings: Settings, worker_id):
     if worker_id == 'master':
