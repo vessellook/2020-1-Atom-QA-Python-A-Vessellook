@@ -7,11 +7,4 @@ main() {
   [ -d allure-reports ] && sudo rm --recursively --force allure-reports;
 }
 
-if [[ -f .env ]]; then
-  source .env;
-else
-  echo .env file not found;
-  exit 1;
-fi
-
 main;

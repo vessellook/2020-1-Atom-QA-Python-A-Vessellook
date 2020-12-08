@@ -15,10 +15,10 @@ services:
     image: aerokube/selenoid:1.10.0
     volumes:
       - ${DOCKER_SOCK}:/var/run/docker.sock
-      - ./mount/selenoid:/etc/selenoid
-      - ./mount/videos:/opt/selenoid/video
+      - ${COMPOSE_PROJECT_PATH}/mount/selenoid:/etc/selenoid
+      - ${COMPOSE_PROJECT_PATH}/mount/videos:/opt/selenoid/video
     environment:
-      OVERRIDE_VIDEO_OUTPUT_DIR: '${PROJECT_PATH:?"You need to specify variable PROJECT_PATH in .env file}/mount/videos'
+      OVERRIDE_VIDEO_OUTPUT_DIR: '${COMPOSE_PROJECT_PATH:?"You need to specify variable PROJECT_PATH in .env file}/mount/videos'
     command: [ "-conf", "/etc/selenoid/browsers.json",
                "-video-output-dir", "/opt/selenoid/video",
                "-container-network", "${COMPOSE_NETWORK_NAME}",
@@ -45,8 +45,8 @@ services:
     ports:
       - ${MYSQL_PORT}:3306
     volumes:
-      - ./mount/mysql/init:/docker-entrypoint-initdb.d
-      - ./mount/mysql/data:/var/lib/mysql
+      - ${COMPOSE_PROJECT_PATH}/mount/mysql/init:/docker-entrypoint-initdb.d
+      - ${COMPOSE_PROJECT_PATH}/mount/mysql/data:/var/lib/mysql
     networks:
       - net
   mock:
@@ -67,7 +67,7 @@ services:
       - mysql
       - mock:vk_api
     volumes:
-      - ./mount/myapp:/config
+      - ${COMPOSE_PROJECT_PATH}/mount/myapp:/config
     command: ["/app/myapp", "--config=/config/config"]
     networks:
       - net
