@@ -1,0 +1,16 @@
+overload:
+  enabled: true
+  token_file: /var/loadtest/token.txt
+  package: yandextank.plugins.DataUploader
+  job_name: test_qa_py_atom-vessellook-artem_const
+  job_dsc: const
+phantom:
+  address: 127.0.0.1:5555
+  ammofile: /var/loadtest/ammo.txt
+  load_profile:
+    load_type: rps
+    schedule: const(2, 30)
+console:
+  enabled: false
+telegraf:
+  enabled: false

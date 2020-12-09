@@ -1,0 +1,13 @@
+[Connection: close]
+[Host: 127.0.0.1:5555]
+/shareware
+
+[Connection: close]
+[Host: 127.0.0.1:5555]
+[Authorization: Basic eWFyOjMzMw==]
+/profile
+
+
+[Connection: close]
+[Host: 127.0.0.1:5555]
+/profile
