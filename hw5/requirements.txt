@@ -1,0 +1,9 @@
+pytest
+pylint
+requests
+pymysql
+sqlalchemy
+faker
+# pymysql requires this package. Otherwise, it raises
+# RuntimeError: 'cryptography' package is required for sha256_password or caching_sha2_password auth methods
+cryptography
