@@ -1,0 +1,22 @@
+- job:
+    name: my-pipeline
+    description: "JJB Project, Pipeline\n"
+    project-type: pipeline
+
+    pipeline-scm:
+      scm:
+        - git:
+            url: git@github.com:vessellook/technoatom-private.git
+            credentials-id: 207e5f1e-6261-49a5-8e34-f3db4246d995
+            branches:
+             - main
+      script-path: "final/configs/pipeline.groovy"
+
+    wrappers:
+      - timestamps
+      - workspace-cleanup
+
+    triggers:
+      - pollscm:
+          cron: '* * * * *'
+

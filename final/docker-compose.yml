@@ -1,0 +1,88 @@
+version: '2.1'
+
+networks:
+  net:
+    driver: bridge
+    name: ${COMPOSE_NETWORK_NAME}
+    ipam:
+      driver: default
+      config:
+        - subnet: ${COMPOSE_NETWORK_SUBNET}
+          gateway: ${COMPOSE_NETWORK_GATEWAY}
+
+services:
+  selenoid:
+    image: aerokube/selenoid:1.10.0
+    volumes:
+      - ${DOCKER_SOCK}:/var/run/docker.sock
+      - ${COMPOSE_PROJECT_PATH}/mount/selenoid:/etc/selenoid
+      - ${COMPOSE_PROJECT_PATH}/mount/videos:/opt/selenoid/video
+    environment:
+      OVERRIDE_VIDEO_OUTPUT_DIR: '${COMPOSE_PROJECT_PATH:?"You need to specify variable PROJECT_PATH in .env file}/mount/videos'
+    command: [ "-conf", "/etc/selenoid/browsers.json",
+               "-video-output-dir", "/opt/selenoid/video",
+               "-container-network", "${COMPOSE_NETWORK_NAME}",
+               "-retry-count", "3",
+               "-cpu", "0.4", ]
+    links:
+      - proxy
+    ports:
+      - ${SELENOID_PORT}:4444
+    networks:
+      - net
+  mysql:
+    image: percona:latest
+    healthcheck:
+      test: "netstat -tlpn | grep 330"
+      interval: 10s
+      timeout: 3s
+      retries: 30
+    environment:
+      MYSQL_DATABASE: technoatom
+      MYSQL_USER: test_qa
+      MYSQL_PASSWORD: qa_test
+      MYSQL_ROOT_PASSWORD: root_pass
+    ports:
+      - ${MYSQL_PORT}:3306
+    volumes:
+      - ${COMPOSE_PROJECT_PATH}/mount/mysql/init:/docker-entrypoint-initdb.d
+      - ${COMPOSE_PROJECT_PATH}/mount/mysql/data:/var/lib/mysql
+    networks:
+      - net
+  mock:
+    build: builds/mock
+    image: ${MOCK_IMAGE_NAME}
+    ports:
+      - ${MOCK_PORT}:5000
+    networks:
+      - net
+  myapp:
+    image: ${APP_IMAGE_NAME}:latest
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mock:
+        condition: service_started
+    links:
+      - mysql
+      - mock:vk_api
+    volumes:
+      - ${COMPOSE_PROJECT_PATH}/mount/myapp:/config
+    command: ["/app/myapp", "--config=/config/config"]
+    networks:
+      - net
+  proxy:
+    build: builds/proxy
+    image: ${PROXY_IMAGE_NAME}
+    depends_on:
+      myapp:
+        condition: service_started
+    links:
+      - myapp
+    ports:
+      - ${PROXY_PORT}:80
+    expose:
+      - 80
+    networks:
+      net:
+        ipv4_address: ${COMPOSE_PROXY_IP_ADDRESS}

@@ -1,0 +1,12 @@
+pytest
+filelock
+pymysql
+sqlalchemy
+pytest-xdist
+pytest-check
+allure-pytest
+dotenv
+requests
+selenium
+webdriver_manager
+bs4
